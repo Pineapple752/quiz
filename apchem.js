@@ -370,3 +370,113 @@ Q("If transmittance increases, absorbance:",["Increases","Decreases","Stays cons
 add(3,
 Q("Which has the highest vapor pressure at 25 °C?",["Water","Ethanol","Diethyl ether","Glycerol"],2,["Strong hydrogen bonding lowers vapor pressure.","Hydrogen bonds hold it back.","Weak IMFs let molecules escape easily.","Extensive hydrogen bonding makes it very low."])
 );
+
+// ---- Unit 4 ----
+add(4,
+Q("What is the coefficient of O₂ when C₃H₈ + O₂ → CO₂ + H₂O is balanced?",["3","4","5","7"],2,["That balances only the carbon.","That doesn't balance the oxygen.","C₃H₈ + 5O₂ → 3CO₂ + 4H₂O.","That's too many oxygens."]),
+Q("A balanced equation shows conservation of:",["Atoms and mass","Only volume","Only charge","Moles of every substance"],0,["Atoms are neither created nor destroyed.","Volume isn't conserved in general.","Charge matters, but atoms matter first.","Mole totals can change."]),
+Q("2Na + Cl₂ → 2NaCl is what type of reaction?",["Synthesis","Decomposition","Combustion","Double replacement"],0,["Two reactants combine into one product.","That is one reactant splitting.","No oxygen reacts.","That swaps partners."]),
+Q("CaCO₃ → CaO + CO₂ is what type of reaction?",["Synthesis","Decomposition","Combustion","Single replacement"],1,["That combines reactants.","One reactant breaks into several products.","No O₂ reactant.","No element replaces another."]),
+Q("CH₄ + 2O₂ → CO₂ + 2H₂O is what type of reaction?",["Combustion","Synthesis","Decomposition","Double replacement"],0,["A hydrocarbon burns in O₂.","More than one product forms.","More than one reactant is present.","No partners swap."]),
+Q("Zn + 2HCl → ZnCl₂ + H₂ is what type of reaction?",["Single replacement","Double replacement","Synthesis","Decomposition"],0,["Zn replaces H in the compound.","Two compounds don't swap partners.","More than one product forms.","More than one reactant."]),
+Q("AgNO₃ + NaCl → AgCl + NaNO₃ is what type of reaction?",["Double replacement","Single replacement","Combustion","Synthesis"],0,["The cations and anions swap partners.","No free element appears.","No O₂ reactant.","Two products form."]),
+Q("How many moles of CO₂ form from 2.0 mol C₃H₈ burning completely?",["2.0","3.0","6.0","8.0"],2,["That ignores the ratio.","That's the ratio for 1 mol.","1 : 3 ratio gives 6.0 mol.","That's the moles of water."]),
+Q("What mass of H₂O forms from 4.0 g H₂ with excess O₂?",["18 g","36 g","72 g","4.0 g"],1,["That's 1 mol.","4.0 g H₂ is about 2 mol, giving about 2 mol H₂O = 36 g.","That's twice too much.","Mass is not conserved per substance."]),
+Q("In N₂ + 3H₂ → 2NH₃, how many grams of NH₃ come from 1.0 mol N₂ with excess H₂?",["17 g","34 g","68 g","28 g"],1,["That's 1 mol NH₃.","1 mol N₂ gives 2 mol NH₃ = 34 g.","That's 4 mol NH₃.","That's the mass of N₂."]),
+Q("In AgNO₃ + NaCl → AgCl + NaNO₃, which is a spectator ion?",["Ag⁺","Cl⁻","Na⁺","AgCl"],2,["Ag⁺ forms the solid.","Cl⁻ forms the solid.","Na⁺ stays dissolved before and after.","That's the precipitate."]),
+Q("Which precipitate forms when Pb(NO₃)₂ and KI mix?",["KNO₃","PbI₂","Pb","K₂I"],1,["That's soluble.","Lead(II) iodide is a yellow solid.","Not formed.","Wrong formula."]),
+Q("What is the net ionic equation for HCl + NaOH → NaCl + H₂O?",["H⁺ + OH⁻ → H₂O","Na⁺ + Cl⁻ → NaCl","HCl → H⁺ + Cl⁻","NaOH → Na⁺ + OH⁻"],0,["Only the neutralization appears.","NaCl stays dissolved.","That's dissociation only.","That's dissociation only."]),
+Q("Which is a strong base?",["NH₃","NaOH","CH₃COOH","HF"],1,["Weak base.","Group 1 hydroxides fully dissociate.","That's an acid.","That's an acid."]),
+Q("Which is a weak acid?",["HCl","HNO₃","HF","H₂SO₄"],2,["Strong acid.","Strong acid.","Only partly dissociates.","Strong in its first dissociation."]),
+Q("How many mL of 0.100 M NaOH neutralize 25.0 mL of 0.100 M HCl?",["12.5","25.0","50.0","100"],1,["That halves it.","1 : 1 ratio at equal molarity.","That doubles it.","That quadruples it."]),
+Q("20.0 mL of 0.200 M NaOH neutralizes 40.0 mL of HCl. What is the HCl molarity?",["0.050 M","0.100 M","0.200 M","0.400 M"],1,["Too low.","0.00400 mol ÷ 0.0400 L = 0.100 M.","That ignores the volume difference.","That multiplies by 2."]),
+Q("The point where an indicator changes color in a titration is the:",["Endpoint","Starting point","Equivalence point only","Triple point"],0,["It approximates the equivalence point.","Not the start.","The two are close but distinct.","That's a phase diagram term."]),
+Q("What is the oxidation number of S in H₂SO₄?",["+2","+4","+6","−2"],2,["Too low.","That's sulfite.","2(+1) + S + 4(−2) = 0, so S = +6.","That's sulfide."]),
+Q("What is the oxidation number of Cr in Cr₂O₇²⁻?",["+3","+6","+7","+12"],1,["That's Cr³⁺.","2Cr + 7(−2) = −2, so Cr = +6.","That's Mn in MnO₄⁻.","That's the sum, not per atom."]),
+Q("What is the oxidation number of N in NH₃?",["+3","−3","0","+5"],1,["That's N in nitrite.","3(+1) + N = 0, so N = −3.","That's elemental N₂.","That's N in nitrate."]),
+Q("What is the oxidation number of O in H₂O₂?",["−2","−1","0","+1"],1,["Normal oxides use −2.","Peroxides have −1.","Elemental O₂ is 0.","Not for oxygen here."]),
+Q("In 2Na + Cl₂ → 2NaCl, which substance is reduced?",["Na","Cl₂","NaCl","None"],1,["Na goes 0 to +1 (oxidized).","Cl goes 0 to −1 (gains electrons).","It's the product.","Electrons transfer."]),
+Q("In Zn + Cu²⁺ → Zn²⁺ + Cu, the oxidizing agent is:",["Zn","Cu²⁺","Zn²⁺","Cu"],1,["That's the reducing agent.","It accepts electrons, causing oxidation.","It's a product.","It's a product."]),
+Q("In Zn + Cu²⁺ → Zn²⁺ + Cu, the reducing agent is:",["Zn","Cu²⁺","Zn²⁺","Cu"],0,["Zn gives up electrons.","That's the oxidizing agent.","It's a product.","It's a product."]),
+Q("Reduction is the:",["Loss of electrons","Gain of electrons","Loss of protons","Gain of neutrons"],1,["That's oxidation.","'OIL RIG': Reduction Is Gain.","Not involved.","Not involved."]),
+Q("Which is a redox reaction?",["NaOH + HCl → NaCl + H₂O","AgNO₃ + NaCl → AgCl + NaNO₃","2Mg + O₂ → 2MgO","CaCl₂ + Na₂CO₃ → CaCO₃ + 2NaCl"],2,["Acid-base, no oxidation numbers change.","Precipitation, no change.","Mg goes 0 to +2 and O goes 0 to −2.","Precipitation, no change."]),
+Q("For 2A + B → C with excess B, how many mol of C form from 5.0 mol A?",["2.5","5.0","7.5","10.0"],0,["5.0 × (1/2) = 2.5 mol.","That ignores the ratio.","That's too many.","That doubles instead of halves."]),
+Q("For 2Al + 3Cl₂ → 2AlCl₃, with 4.0 mol Al and 3.0 mol Cl₂, how much AlCl₃ forms?",["2.0 mol","3.0 mol","4.0 mol","6.0 mol"],0,["Cl₂ is limiting: 3.0 × (2/3) = 2.0.","That ignores the ratio.","That assumes Al is limiting.","That's too many."]),
+Q("In the same reaction (4.0 mol Al, 3.0 mol Cl₂), how much Al is left over?",["0 mol","1.0 mol","2.0 mol","4.0 mol"],2,["Al is in excess.","Al used is 2.0 mol, not 3.0.","4.0 − 2.0 = 2.0 mol left.","None would be used then."]),
+Q("An actual yield of 45 g with a theoretical yield of 60 g gives a percent yield of:",["25%","75%","133%","45%"],1,["That's the percent lost.","45 ÷ 60 × 100 = 75%.","That inverts the ratio.","That's the mass in grams."]),
+Q("Which reaction produces a gas?",["NaOH + HCl","Na₂CO₃ + 2HCl","KNO₃ + NaCl","AgNO₃ + NaCl"],1,["Forms water only.","Carbonate plus acid releases CO₂.","No reaction occurs.","Forms a solid."]),
+Q("Complete combustion of a hydrocarbon produces:",["CO₂ and H₂O","CO and H₂","C and H₂O","CH₄ and O₂"],0,["Complete burning gives these two.","That's incomplete combustion.","Not typical.","Those are reactants or fuel."]),
+Q("Which anion forms an insoluble salt with Ag⁺?",["NO₃⁻","Cl⁻","C₂H₃O₂⁻","ClO₄⁻"],1,["Always soluble.","AgCl is insoluble.","Generally soluble.","Soluble."]),
+Q("Mixing Na₂SO₄(aq) and BaCl₂(aq) forms what precipitate?",["NaCl","BaSO₄","Na₂Ba","BaCl₂"],1,["Soluble.","Barium sulfate is insoluble.","Not a compound formed.","That's a reactant."]),
+Q("In 2H₂ + O₂ → 2H₂O, how many mol of H₂O form from 3.0 mol O₂ with excess H₂?",["1.5","3.0","6.0","9.0"],2,["Too low.","That ignores the ratio.","1 O₂ gives 2 H₂O, so 6.0.","Too high."]),
+Q("If 10 g of A reacts completely with 5 g of B, the mass of products is:",["5 g","10 g","15 g","50 g"],2,["Mass is conserved.","That ignores B.","Total mass of products equals total mass of reactants.","That multiplies."]),
+Q("A total ionic equation shows:",["All dissolved ions separately","Only spectator ions","Only the precipitate","Only solids"],0,["Strong electrolytes are split into ions.","Spectators appear but aren't alone.","The precipitate is written whole.","It includes aqueous ions."]),
+Q("In a Brønsted–Lowry acid-base reaction, the acid is the:",["Proton donor","Proton acceptor","Electron donor","Electron acceptor"],0,["Acids give away H⁺.","That's the base.","That's a Lewis base.","That's a Lewis acid."]),
+Q("In HF + H₂O ⇌ F⁻ + H₃O⁺, the conjugate base is:",["HF","H₂O","F⁻","H₃O⁺"],2,["That's the acid.","That's the base.","F⁻ is HF after losing H⁺.","That's the conjugate acid."])
+);
+
+// ---- Units 5-9 expansion ----
+add(5,
+Q("A rate law must be determined from:",["Experiments","The balanced equation","Molar masses","ΔH"],0,["Rate laws come from data.","Coefficients don't set the orders.","Not related.","Not related."]),
+Q("What is the overall order of rate = k[A][B]²?",["1","2","3","4"],2,["That's one exponent.","That adds only A and B.","1 + 2 = 3.","Too high."]),
+Q("What are the units of k for a second-order reaction?",["s⁻¹","M⁻¹s⁻¹","M·s⁻¹","M"],1,["First order.","Rate ÷ M² gives M⁻¹s⁻¹.","Units of rate.","Concentration."]),
+Q("For a zero-order reaction, the rate:",["Depends on [A]","Is independent of [A]","Doubles with time","Is zero"],1,["That's not zero order.","Rate = k.","No such trend.","It's constant, not zero."]),
+Q("The rate-determining step is the:",["Fastest step","Slowest step","First step always","Last step always"],1,["The slow step limits the rate.","It's the bottleneck.","Not always first.","Not always last."]),
+Q("For a first-order reaction, which plot is linear?",["[A] vs t","ln[A] vs t","1/[A] vs t","[A]² vs t"],1,["That's zero order.","Slope is −k.","That's second order.","Not used."]),
+Q("An intermediate is a species that is:",["Produced then consumed in the mechanism","Present at the start and end","A catalyst","Always a product"],0,["It doesn't appear in the overall equation.","That's a catalyst.","A catalyst is unchanged.","It's consumed."]),
+Q("An effective collision requires:",["Enough energy and proper orientation","Only high temperature","Only proper orientation","A catalyst"],0,["Both factors matter.","Orientation matters too.","Energy matters too.","Not required."]),
+Q("A first-order reaction has t½ = 20 min. What fraction remains after 60 min?",["1/2","1/4","1/8","1/16"],2,["That's one half-life.","That's two.","Three half-lives gives (1/2)³.","That's four."]),
+Q("Activation energy on a reaction diagram is the energy difference between:",["Reactants and transition state","Reactants and products","Products and transition state","Reactants and catalyst"],0,["That's the barrier height.","That's ΔH.","That's the reverse barrier.","Not used."])
+);
+
+add(6,
+Q("An exothermic reaction has:",["ΔH > 0","ΔH < 0","ΔH = 0","No energy change"],1,["That's endothermic.","Heat is released.","Heat is exchanged.","Energy is released."]),
+Q("In an exothermic reaction, heat flows:",["From surroundings to system","From system to surroundings","Nowhere","Into the products only"],1,["That's endothermic.","The surroundings warm up.","Heat transfers.","Heat leaves the system."]),
+Q("In calorimetry, q_reaction equals:",["+q_solution","−q_solution","0","2 × q_solution"],1,["Opposite signs.","Energy lost by the reaction is gained by the solution.","Energy is exchanged.","No factor of 2."]),
+Q("ΔH°rxn equals:",["Σ products − Σ reactants (ΔH°f)","Σ reactants − Σ products","Only the products","Bond energies of products"],0,["Products minus reactants.","That flips the sign.","Reactants matter too.","Not this method."]),
+Q("What is ΔH°f of an element in its standard state?",["0","1","−1","Depends on the element"],0,["By definition.","Not defined that way.","Not defined that way.","Always zero."]),
+Q("How much heat warms 20.0 g of metal (c = 0.50 J/g·°C) by 10.0 °C?",["10 J","100 J","1000 J","250 J"],1,["Missing the mass.","20.0 × 0.50 × 10.0 = 100 J.","Off by 10.","Wrong arithmetic."]),
+Q("Using bond enthalpies, ΔH equals:",["Bonds broken − bonds formed","Bonds formed − bonds broken","Bonds broken + bonds formed","Zero"],0,["Breaking costs energy.","That flips the sign.","They have opposite signs.","Not zero."]),
+Q("The heat of fusion is the heat needed to:",["Melt a solid at constant T","Boil a liquid","Raise T by 1 °C","Sublime a solid"],0,["Fusion means melting.","That's vaporization.","That's heat capacity.","That's sublimation."]),
+Q("If you double the amount of reactant, the total ΔH:",["Halves","Doubles","Stays the same","Becomes zero"],1,["More reactant means more heat.","ΔH is extensive.","It scales with amount.","Not zero."]),
+Q("Equal masses of water at 80 °C and 20 °C are mixed. The final temperature is:",["20 °C","50 °C","80 °C","100 °C"],1,["That's the cold start.","The average for equal masses.","That's the hot start.","Too high."])
+);
+
+add(7,
+Q("What is K for 2SO₂ + O₂ ⇌ 2SO₃?",["[SO₃]²/([SO₂]²[O₂])","[SO₃]/([SO₂][O₂])","[SO₂]²[O₂]/[SO₃]²","[SO₃]²/[SO₂][O₂]²"],0,["Products over reactants with coefficients.","Missing exponents.","That's inverted.","Wrong exponents."]),
+Q("What is K for CaCO₃(s) ⇌ CaO(s) + CO₂(g)?",["[CO₂]","[CaO][CO₂]/[CaCO₃]","1/[CO₂]","[CaO]"],0,["Solids are left out.","Solids are not included.","That's inverted.","Solids are left out."]),
+Q("If Q < K, the reaction shifts:",["Right","Left","Not at all","Randomly"],0,["Too few products, so it makes more.","That's for Q > K.","It isn't at equilibrium.","It's predictable."]),
+Q("Adding product to a system at equilibrium shifts it:",["Toward products","Toward reactants","Not at all","Off to a new K"],1,["That would worsen the stress.","Le Chatelier opposes the change.","It does shift.","K doesn't change."]),
+Q("Raising T on an exothermic reaction at equilibrium shifts it:",["Left, and K decreases","Right, and K increases","Left, and K increases","Right, and K decreases"],0,["Heat acts like a product, so it shifts away.","That's for endothermic.","K changes with T.","K changes with T."]),
+Q("Adding a catalyst to a system at equilibrium:",["Shifts it right","Shifts it left","Doesn't change K or position","Changes K"],2,["It speeds both directions equally.","It speeds both directions equally.","Equilibrium is reached faster.","K is unaffected."]),
+Q("What is Ksp for CaF₂?",["[Ca²⁺][F⁻]","[Ca²⁺][F⁻]²","[Ca²⁺]²[F⁻]","[CaF₂]"],1,["Missing the exponent.","Two F⁻ ions per formula unit.","Exponents swapped.","Solids are excluded."]),
+Q("If K = 4.0 for a reaction, K for the reverse reaction is:",["4.0","0.25","−4.0","16"],1,["That's for the forward reaction.","Reverse K = 1/K.","K is not negative.","That's K²."]),
+Q("K = 1 × 10⁻⁵ means:",["Reactants are favored","Products are favored","The reaction is fast","The reaction is complete"],0,["A small K means little product.","That's a large K.","K doesn't give speed.","It barely proceeds."]),
+Q("At equilibrium:",["Forward and reverse rates are equal","All concentrations are equal","The reaction stops","Q = 0"],0,["Rates match, so concentrations are constant.","Concentrations needn't be equal.","It continues at equal rates.","Q equals K."])
+);
+
+add(8,
+Q("What is the pH of 0.0010 M NaOH?",["3","7","11","14"],2,["That's for 0.0010 M acid.","Neutral.","pOH = 3, so pH = 11.","Too basic."]),
+Q("A strong acid solution has [H⁺] = 1 × 10⁻³ M. Its pH is:",["3","11","−3","7"],0,["−log(10⁻³) = 3.","That's the pOH conjugate.","pH isn't negative here.","Neutral."]),
+Q("At 25 °C, K_w equals:",["1.0 × 10⁻⁷","1.0 × 10⁻¹⁴","14","1.0"],1,["That's [H⁺].","[H⁺][OH⁻] = 1.0 × 10⁻¹⁴.","That's pH + pOH.","Not K_w."]),
+Q("The conjugate base of a strong acid is:",["Strong","Negligibly basic","Very acidic","Amphoteric"],1,["It's very weak.","Strong acids dissociate completely.","Bases aren't acidic.","Not typical."]),
+Q("At the equivalence point of a weak acid–strong base titration, pH is:",["Less than 7","Equal to 7","Greater than 7","Zero"],2,["That's weak base–strong acid.","That's strong–strong.","The conjugate base makes it basic.","Not zero."]),
+Q("Which pair makes the best buffer near pH 4.7?",["CH₃COOH / CH₃COO⁻","HCl / Cl⁻","NaOH / Na⁺","H₂O / OH⁻"],0,["Acetic acid has pKa near 4.76.","Strong acid, no buffering.","Strong base, no buffering.","Not a buffer."]),
+Q("Adding a small amount of strong acid to a buffer makes the pH:",["Change very little","Drop sharply","Rise sharply","Become 7"],0,["The conjugate base absorbs the acid.","That's an unbuffered solution.","Acid lowers pH.","Not necessarily 7."]),
+Q("If [A⁻] = [HA] in a buffer, then pH equals:",["pKa","7","pKw","0"],0,["Henderson–Hasselbalch with log(1) = 0.","Only coincidentally.","Not relevant.","Not relevant."]),
+Q("A solution of NaCl in water has a pH of:",["About 7","Below 7","Above 7","Zero"],0,["Neither ion hydrolyzes.","Not acidic.","Not basic.","Not zero."]),
+Q("A solution of NH₄Cl in water is:",["Acidic","Basic","Neutral","Amphoteric"],0,["NH₄⁺ is a weak acid.","Cl⁻ is not basic.","NH₄⁺ donates protons.","Not applicable."])
+);
+
+add(9,
+Q("Which process has a positive ΔS?",["Ice melting","Water freezing","Gas condensing","Salt crystallizing"],0,["Solid to liquid increases disorder.","That lowers entropy.","That lowers entropy.","That lowers entropy."]),
+Q("If K > 1, then ΔG° is:",["Negative","Positive","Zero","Undefined"],0,["ΔG° = −RT ln K.","That's for K < 1.","That's K = 1.","It's defined."]),
+Q("ΔH > 0 and ΔS > 0: the reaction is spontaneous:",["At high T","At low T","Never","Always"],0,["TΔS must outweigh ΔH.","That would need ΔH < 0.","It can be at high T.","Not always."]),
+Q("Reduction occurs at the:",["Anode","Cathode","Salt bridge","Wire"],1,["That's oxidation.","Cathode is where reduction happens.","It balances charge.","Electrons travel there."]),
+Q("In a galvanic cell, electrons flow:",["Anode to cathode","Cathode to anode","Through the salt bridge","Not at all"],0,["Through the external wire.","Opposite direction.","Ions use the bridge.","They do flow."]),
+Q("The standard hydrogen electrode has a potential of:",["0.00 V","1.00 V","−1.00 V","0.76 V"],0,["It's the reference.","Not the reference.","Not the reference.","That's Zn."]),
+Q("What does a salt bridge do?",["Maintains charge balance","Carries electrons","Produces current","Stops the reaction"],0,["Ions migrate to balance charge.","Electrons use the wire.","The redox reaction does that.","It keeps it going."]),
+Q("Electrolysis uses electrical energy to drive:",["A nonspontaneous reaction","A spontaneous reaction","No reaction","A nuclear reaction"],0,["That's the point.","That's a galvanic cell.","It drives a reaction.","Not nuclear."]),
+Q("At equilibrium, E_cell equals:",["0 V","E°","1.00 V","−E°"],0,["The cell can do no more work.","That's for standard conditions.","Not fixed.","Not applicable."]),
+Q("Which process has a negative ΔS?",["Water freezing","Ice melting","Boiling","Gas expanding"],0,["Liquid to solid lowers entropy.","Increases entropy.","Increases entropy.","Increases entropy."])
+);
