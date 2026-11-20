@@ -1,145 +1,695 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lock In · AP Chem</title>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&display=swap" rel="stylesheet">
-<style>
-:root{--bg:#0b0b14;--card:#15152a;--line:#26264a;--ink:#f3f3ff;--dim:#9a9ac4;--a:#8b5cf6;--b:#22d3ee;--ok:#34d399;--bad:#fb7185;--gold:#fbbf24}
-@media(prefers-color-scheme:light){:root{--bg:#f4f3ff;--card:#fff;--line:#d9d6f5;--ink:#15122e;--dim:#5b5886}}
-*{box-sizing:border-box}
-body{margin:0;background:radial-gradient(900px 500px at 80% -10%,#8b5cf633,transparent),var(--bg);color:var(--ink);font:16px/1.5 Sora,system-ui,sans-serif;min-height:100vh}
-main{max-width:620px;margin:0 auto;padding:18px 16px 70px}
-button{font:inherit;color:inherit;cursor:pointer}
-button:focus-visible{outline:3px solid var(--b);outline-offset:2px}
-.top{display:flex;align-items:center;gap:10px;margin-bottom:22px}
-.logo{font-weight:800;letter-spacing:-.03em;font-size:1.15rem;background:linear-gradient(90deg,var(--a),var(--b));-webkit-background-clip:text;background-clip:text;color:transparent}
-.sp{flex:1}
-.chip{background:var(--card);border:1px solid var(--line);border-radius:99px;padding:4px 12px;font-size:.82rem;font-weight:600;white-space:nowrap}
-h1{font-size:2.1rem;line-height:1.1;font-weight:800;letter-spacing:-.04em;margin:.1em 0 .3em}
-.sub{color:var(--dim);margin:0 0 20px}
-.card{display:block;width:100%;text-align:left;background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:15px 16px;margin-bottom:10px;transition:transform .12s,border-color .12s}
-.card:hover:not(:disabled){transform:translateY(-2px);border-color:var(--a)}
-.card:disabled{opacity:.4;cursor:not-allowed}
-.card b{display:block;font-weight:600}.card small{color:var(--dim)}
-.card.hero{background:linear-gradient(135deg,#8b5cf6,#22d3ee);border:0;color:#fff}
-.card.hero small{color:#ffffffd0}
-.back{background:none;border:0;padding:0;margin-bottom:16px;color:var(--b);font-weight:600}
-.meter{height:6px;background:var(--line);border-radius:9px;overflow:hidden;margin-top:8px}
-.meter i{display:block;height:100%;background:linear-gradient(90deg,var(--a),var(--b));border-radius:9px;transition:width .3s}
-.pills{display:flex;gap:8px;margin:0 0 18px;flex-wrap:wrap}
-.pill{background:var(--card);border:1.5px solid var(--line);border-radius:99px;padding:7px 14px;font-weight:600;font-size:.9rem}
-.pill.on{background:var(--a);border-color:var(--a);color:#fff}
-.hud{display:flex;align-items:center;gap:10px;margin-bottom:6px;font-size:.85rem;color:var(--dim)}
-.opt{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:13px 14px;margin-bottom:9px;transition:transform .1s,border-color .1s}
-.opt:hover:not(:disabled){border-color:var(--b);transform:translateX(3px)}
-.opt .k{flex:none;width:26px;height:26px;border-radius:8px;background:var(--line);display:grid;place-items:center;font-size:.8rem;font-weight:800}
-.opt.ok{border-color:var(--ok);background:#34d39922}.opt.ok .k{background:var(--ok);color:#06251a}
-.opt.no{border-color:var(--bad);background:#fb718522;animation:shake .35s}.opt.no .k{background:var(--bad);color:#2a0710}
-@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
-.q{font-size:1.2rem;font-weight:600;line-height:1.4;margin:6px 0 18px}
-.tag{display:inline-block;font-size:.7rem;font-weight:800;letter-spacing:.06em;padding:2px 8px;border-radius:6px;background:var(--gold);color:#3b2a00;margin-bottom:6px}
-.fb{border-radius:14px;padding:13px 15px;margin:14px 0;background:var(--card);border:1.5px solid var(--line)}
-.fb.good{border-color:var(--ok)}.fb.bad{border-color:var(--bad)}
-.fb p{margin:0 0 .5em}.fb p:last-child{margin:0}
-.go{background:linear-gradient(90deg,var(--a),var(--b));color:#fff;border:0;border-radius:14px;padding:13px 26px;font-weight:800;width:100%}
-.big{font-size:4rem;font-weight:800;letter-spacing:-.05em;margin:0;background:linear-gradient(90deg,var(--a),var(--b));-webkit-background-clip:text;background-clip:text;color:transparent}
-.pop{position:fixed;right:18px;top:70px;font-weight:800;color:var(--gold);animation:up .9s forwards;pointer-events:none}
-@keyframes up{to{transform:translateY(-34px);opacity:0}}
-li{margin-bottom:.8em}
-</style>
-</head>
-<body>
-<main id="app"></main>
-<script src="apchem.js"></script>
-<script>
-const app=document.getElementById('app');
-let course,pool,idx,score,missed,label,streak=0,tier='mix',LP,gained=0;
-let SAVE={xp:0,best:{},bestStreak:0};
-try{Object.assign(SAVE,JSON.parse(localStorage.getItem('lockin')||'{}'))}catch(e){}
-const save=()=>{try{localStorage.setItem('lockin',JSON.stringify(SAVE))}catch(e){}};
-const shuffle=a=>a.map(x=>[Math.random(),x]).sort((p,q)=>p[0]-q[0]).map(x=>x[1]);
-const ready=c=>c.topics.filter(t=>t.qs.length);
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const prep=q=>{const o=shuffle(q.o.map((_,i)=>i));return{q:q.q,hard:q.hard,o:o.map(i=>q.o[i]),a:o.indexOf(q.a),f:o.map(i=>q.f[i])}};
-const lvl=()=>Math.floor(SAVE.xp/200)+1;
-const hdr=back=>`<div class="top">${back||''}<span class="logo">LOCK IN</span><span class="sp"></span><span class="chip">⚡ Lv ${lvl()}</span><span class="chip">${SAVE.xp} XP</span></div>`;
-const byTier=qs=>qs.filter(q=>tier=='hard'?q.hard:tier=='easy'?!q.hard:true);
-function sample(ts,n){const L=ts.map(t=>shuffle(byTier(t.qs))),out=[];for(let i=0;out.length<n;i++){let any=false;for(const l of L)if(i<l.length&&out.length<n){out.push(l[i]);any=true}if(!any)break}return out}
+// AP Chemistry question bank. Q(prompt, [4 options], indexOfCorrect, [feedback per option])
+const Q=(q,o,a,f)=>({q,o,a,f});
+const P=(n,f,g)=>({n,f,g});
+const POLY=[{"n":"ammonium","f":"NH₄⁺","g":"N"},{"n":"hydronium","f":"H₃O⁺","g":"X"},{"n":"hydroxide","f":"OH⁻","g":"X"},{"n":"cyanide","f":"CN⁻","g":"C"},{"n":"thiocyanate","f":"SCN⁻","g":"C"},{"n":"acetate","f":"C₂H₃O₂⁻","g":"C"},{"n":"oxalate","f":"C₂O₄²⁻","g":"C"},{"n":"carbonate","f":"CO₃²⁻","g":"C"},{"n":"hydrogen carbonate","f":"HCO₃⁻","g":"C"},{"n":"nitrate","f":"NO₃⁻","g":"N"},{"n":"nitrite","f":"NO₂⁻","g":"N"},{"n":"sulfate","f":"SO₄²⁻","g":"S"},{"n":"sulfite","f":"SO₃²⁻","g":"S"},{"n":"hydrogen sulfate","f":"HSO₄⁻","g":"S"},{"n":"hydrogen sulfite","f":"HSO₃⁻","g":"S"},{"n":"thiosulfate","f":"S₂O₃²⁻","g":"S"},{"n":"phosphate","f":"PO₄³⁻","g":"P"},{"n":"phosphite","f":"PO₃³⁻","g":"P"},{"n":"hydrogen phosphate","f":"HPO₄²⁻","g":"P"},{"n":"dihydrogen phosphate","f":"H₂PO₄⁻","g":"P"},{"n":"hypochlorite","f":"ClO⁻","g":"Cl"},{"n":"chlorite","f":"ClO₂⁻","g":"Cl"},{"n":"chlorate","f":"ClO₃⁻","g":"Cl"},{"n":"perchlorate","f":"ClO₄⁻","g":"Cl"},{"n":"bromate","f":"BrO₃⁻","g":"Cl"},{"n":"iodate","f":"IO₃⁻","g":"Cl"},{"n":"permanganate","f":"MnO₄⁻","g":"M"},{"n":"chromate","f":"CrO₄²⁻","g":"M"},{"n":"dichromate","f":"Cr₂O₇²⁻","g":"M"},{"n":"peroxide","f":"O₂²⁻","g":"X"},{"n":"bromite","f":"BrO₂⁻","g":"Cl"},{"n":"hypobromite","f":"BrO⁻","g":"Cl"},{"n":"perbromate","f":"BrO₄⁻","g":"Cl"},{"n":"periodate","f":"IO₄⁻","g":"Cl"},{"n":"cyanate","f":"OCN⁻","g":"C"},{"n":"hydrogen oxalate","f":"HC₂O₄⁻","g":"C"},{"n":"silicate","f":"SiO₃²⁻","g":"X"},{"n":"borate","f":"BO₃³⁻","g":"X"},{"n":"arsenate","f":"AsO₄³⁻","g":"P"},{"n":"selenate","f":"SeO₄²⁻","g":"S"},{"n":"hydrogen sulfide","f":"HS⁻","g":"S"},{"n":"manganate","f":"MnO₄²⁻","g":"M"},{"n":"mercury(I)","f":"Hg₂²⁺","g":"X"},{"n":"azide","f":"N₃⁻","g":"N"}];
+const COURSES=[{id:'apchem',name:'AP Chemistry',topics:[
+{name:"Polyatomic Ions",qs:[
+Q("Which is the formula and charge of the sulfate ion?",["SO₃²⁻","SO₄²⁻","SO₄⁻","S₂O₃²⁻"],1,["That's sulfite, which has one fewer oxygen.","Sulfate is SO₄²⁻: four oxygens and a 2− charge.","Right atoms, wrong charge. Sulfate is 2−.","That's thiosulfate, which has two sulfurs."]),
+Q("Which is the formula of the nitrate ion?",["NO₂⁻","NO₃⁻","NO₃²⁻","NH₄⁺"],1,["That's nitrite, one fewer oxygen.","Nitrate is NO₃⁻ with a 1− charge.","Right atoms, but nitrate's charge is 1−, not 2−.","That's ammonium, a cation."]),
+Q("Which of these common polyatomic ions is a cation?",["OH⁻","NH₄⁺","CN⁻","NO₃⁻"],1,["Hydroxide is an anion.","Ammonium is the one common polyatomic cation.","Cyanide is an anion.","Nitrate is an anion."]),
+Q("What is the charge on the phosphate ion, PO₄?",["1−","2−","3−","3+"],2,["1− fits nitrate or hydroxide, not phosphate.","2− fits sulfate or carbonate, not phosphate.","Phosphate is PO₄³⁻.","Oxyanions like phosphate are negative, never positive."]),
+Q("What is the name of ClO₃⁻?",["Chlorite","Chlorate","Perchlorate","Hypochlorite"],1,["Chlorite is ClO₂⁻, one fewer oxygen.","Chlorate is the '-ate' base form: ClO₃⁻.","Perchlorate is ClO₄⁻, one more oxygen.","Hypochlorite is ClO⁻."]),
+Q("What is the formula of calcium hydroxide?",["CaOH","Ca(OH)₂","Ca₂OH","CaO₂H₂"],1,["Ca²⁺ needs two OH⁻ ions to balance, not one.","Ca²⁺ + 2 OH⁻. Parentheses keep OH together as one unit.","A subscript 2 on Ca would give 4+ total, not balance the 2+.","Without parentheses the OH unit is broken apart and the formula is misread."]),
+Q("What is the formula of aluminum sulfate?",["AlSO₄","Al₂SO₄","Al(SO₄)₃","Al₂(SO₄)₃"],3,["Al³⁺ and SO₄²⁻ do not balance 1:1.","Only fixes the aluminum: 6+ vs 2−.","Needs two Al to match three sulfates: 3+ vs 6− is unbalanced.","2(3+) = 6+ and 3(2−) = 6−, so the charges cancel."]),
+Q("What is HCO₃⁻ called?",["Carbonate","Bicarbonate (hydrogen carbonate)","Carbide","Hydroxycarbonate"],1,["Carbonate is CO₃²⁻, with no hydrogen.","Right. It's carbonate plus one H⁺, so the charge drops to 1−.","Carbide is C⁴⁻, a monatomic ion.","Not a standard name for this ion."]),
+Q("What is the name of SO₃²⁻?",["Sulfate","Sulfite","Sulfide","Thiosulfate"],1,["Sulfate is SO₄²⁻, one more oxygen.","'-ite' means one fewer oxygen than '-ate': SO₃²⁻.","Sulfide is just S²⁻.","Thiosulfate is S₂O₃²⁻."]),
+Q("What is the formula of ammonium phosphate?",["NH₄PO₄","(NH₄)₃PO₄","NH₄(PO₄)₃","(NH₄)₂PO₄"],1,["1+ and 3− don't cancel.","Three NH₄⁺ (3+) balance one PO₄³⁻ (3−).","That puts the 3 on phosphate, giving 1+ vs 9−.","Two NH₄⁺ gives only 2+, which doesn't cancel 3−."]),
+Q("Which is the carbonate ion?",["CO₃²⁻","CO₂²⁻","HCO₃⁻","C₂O₄²⁻"],0,["Carbonate is CO₃²⁻.","That's not a standard ion.","That's hydrogen carbonate.","That's oxalate."]),
+Q("Which is the acetate ion?",["C₂H₃O₂⁻","CO₃²⁻","C₂O₄²⁻","CH₃⁻"],0,["Acetate is C₂H₃O₂⁻ (also written CH₃COO⁻).","That's carbonate.","That's oxalate.","That's not acetate."]),
+Q("Which is the oxalate ion?",["C₂O₄²⁻","C₂H₃O₂⁻","CO₃²⁻","C₂O₃²⁻"],0,["Oxalate is C₂O₄²⁻.","That's acetate.","That's carbonate.","That isn't a standard ion."]),
+Q("What is NH₄⁺ called?",["Ammonia","Ammonium","Amide","Nitrate"],1,["Ammonia is neutral NH₃.","Ammonium is NH₄⁺.","Amide is NH₂⁻.","Nitrate is NO₃⁻."]),
+Q("What is H₃O⁺ called?",["Hydroxide","Hydronium","Hydride","Peroxide"],1,["Hydroxide is OH⁻.","Hydronium is H₃O⁺, the acid ion in water.","Hydride is H⁻.","Peroxide is O₂²⁻."]),
+Q("What is CN⁻ called?",["Cyanate","Cyanide","Nitrile","Thiocyanate"],1,["Cyanate is OCN⁻.","CN⁻ is cyanide.","Nitrile is an organic group.","Thiocyanate is SCN⁻."]),
+Q("What is MnO₄⁻ called?",["Manganate","Permanganate","Manganite","Manganese oxide"],1,["Manganate is MnO₄²⁻.","Permanganate is MnO₄⁻.","Not a standard name.","That's an oxide compound."]),
+Q("What is Cr₂O₇²⁻ called?",["Chromate","Dichromate","Chromite","Chromium oxide"],1,["Chromate is CrO₄²⁻.","Two chromiums make dichromate.","Not a standard name.","That's a different compound."]),
+Q("What is PO₃³⁻ called?",["Phosphate","Phosphite","Phosphide","Hypophosphite"],1,["Phosphate is PO₄³⁻.","Phosphite has one fewer oxygen.","Phosphide is P³⁻.","Hypophosphite has two fewer oxygens."]),
+Q("What is ClO⁻ called?",["Chlorite","Hypochlorite","Perchlorate","Chloride"],1,["Chlorite is ClO₂⁻.","Hypochlorite has the fewest oxygens.","Perchlorate is ClO₄⁻.","Chloride is Cl⁻."]),
+Q("What is ClO₄⁻ called?",["Chlorate","Perchlorate","Chlorite","Hypochlorite"],1,["Chlorate is ClO₃⁻.","'Per-' means one more oxygen than chlorate.","Chlorite is ClO₂⁻.","Hypochlorite is ClO⁻."]),
+Q("What is NO₂⁻ called?",["Nitrate","Nitrite","Nitride","Nitrogen dioxide"],1,["Nitrate is NO₃⁻.","'-ite' means one fewer oxygen than nitrate.","Nitride is N³⁻.","That's the neutral molecule."]),
+Q("What is BrO₃⁻ called?",["Bromide","Bromite","Bromate","Perbromate"],2,["Bromide is Br⁻.","Bromite is BrO₂⁻.","It follows chlorate's pattern.","Perbromate is BrO₄⁻."]),
+Q("What is S₂O₃²⁻ called?",["Sulfite","Thiosulfate","Sulfate","Persulfate"],1,["Sulfite is SO₃²⁻.","Thio- means one O replaced by S.","Sulfate is SO₄²⁻.","Persulfate is S₂O₈²⁻."]),
+Q("What is HSO₄⁻ called?",["Sulfite","Hydrogen sulfate (bisulfate)","Hydrogen sulfite","Sulfide"],1,["Sulfite is SO₃²⁻.","SO₄²⁻ plus one H⁺.","That's HSO₃⁻.","Sulfide is S²⁻."]),
+Q("What is H₂PO₄⁻ called?",["Phosphate","Hydrogen phosphate","Dihydrogen phosphate","Phosphite"],2,["That's PO₄³⁻.","That's HPO₄²⁻.","Two hydrogens added to phosphate, with a 1− charge.","That's PO₃³⁻."]),
+Q("What is the charge on the hydrogen phosphate ion, HPO₄?",["1−","2−","3−","4−"],1,["That's dihydrogen phosphate.","Phosphate is 3−, and adding one H⁺ makes 2−.","That's phosphate.","No common ion has this charge."]),
+Q("What is the formula of sodium sulfate?",["NaSO₄","Na₂SO₄","Na(SO₄)₂","Na₂S"],1,["1+ and 2− don't balance.","Two Na⁺ balance one SO₄²⁻.","That gives 1+ and 4−.","That's sodium sulfide."]),
+Q("What is the formula of magnesium nitrate?",["MgNO₃","Mg(NO₃)₂","Mg₂NO₃","Mg₂(NO₃)"],1,["2+ and 1− don't balance.","One Mg²⁺ needs two NO₃⁻.","That gives 4+ and 1−.","That puts the subscript on Mg."]),
+Q("What is the formula of potassium permanganate?",["KMnO₄","K₂MnO₄","K(MnO₄)₂","KMn₂O₄"],0,["K⁺ and MnO₄⁻ balance 1:1.","That's potassium manganate.","That's an unbalanced ratio.","That breaks up the ion."]),
+Q("What is the formula of calcium phosphate?",["CaPO₄","Ca₂PO₄","Ca₃(PO₄)₂","Ca₂(PO₄)₃"],2,["2+ and 3− don't balance.","4+ and 3− don't balance.","3(2+) = 6+ and 2(3−) = 6−.","That swaps the subscripts."]),
+Q("What is the formula of iron(III) sulfate?",["FeSO₄","Fe₂(SO₄)₃","Fe₃(SO₄)₂","Fe(SO₄)₃"],1,["That's iron(II) sulfate.","2(3+) = 6+ and 3(2−) = 6−.","That swaps the subscripts.","That gives 3+ and 6−."]),
+Q("What is the formula of ammonium sulfate?",["NH₄SO₄","(NH₄)₂SO₄","NH₄(SO₄)₂","(NH₄)₃SO₄"],1,["1+ and 2− don't balance.","Two NH₄⁺ balance one SO₄²⁻.","That makes two sulfates.","That gives 3+ and 2−."]),
+Q("What is the formula of barium chlorate?",["BaClO₃","Ba(ClO₃)₂","Ba₂ClO₃","BaCl₂O₃"],1,["2+ and 1− don't balance.","Ba²⁺ needs two ClO₃⁻.","That gives 4+ and 1−.","That breaks up the ion."]),
+Q("What is the formula of zinc carbonate?",["ZnCO₃","Zn₂CO₃","Zn(CO₃)₂","ZnC₂O₃"],0,["Zn²⁺ and CO₃²⁻ balance 1:1.","That gives 4+ and 2−.","That gives 2+ and 4−.","That breaks up the ion."]),
+Q("What is the name of Cu(NO₃)₂?",["Copper nitrate","Copper(II) nitrate","Copper(I) nitrate","Copper dinitrate"],1,["Copper needs a Roman numeral.","Two NO₃⁻ means Cu²⁺.","That would be CuNO₃.","Prefixes aren't used in ionic names."]),
+Q("What is the name of NaClO?",["Sodium chlorite","Sodium hypochlorite","Sodium chlorate","Sodium perchlorate"],1,["That's NaClO₂.","ClO⁻ is hypochlorite.","That's NaClO₃.","That's NaClO₄."]),
+Q("What is the name of NaHCO₃?",["Sodium carbonate","Sodium hydrogen carbonate","Sodium hydroxide","Sodium oxalate"],1,["That's Na₂CO₃.","Also called baking soda.","That's NaOH.","That's Na₂C₂O₄."]),
+Q("What is the name of K₂Cr₂O₇?",["Potassium chromate","Potassium dichromate","Potassium chromite","Potassium chromium oxide"],1,["That's K₂CrO₄.","Contains Cr₂O₇²⁻.","Not a standard name.","That's a different compound."]),
+Q("What is the name of Fe(OH)₃?",["Iron hydroxide","Iron(III) hydroxide","Iron(II) hydroxide","Iron trihydroxide"],1,["Iron needs a Roman numeral.","Three OH⁻ means Fe³⁺.","That's Fe(OH)₂.","Prefixes aren't used in ionic names."]),
+Q("Compared with the '-ate' ion of the same element, the '-ite' ion has:",["One fewer oxygen","One more oxygen","A different charge","No oxygen"],0,["Chlorite has one fewer oxygen than chlorate.","That's 'per-'.","The charge usually stays the same.","Both contain oxygen."]),
+Q("Which ion does not have a 1− charge?",["NO₃⁻","ClO₃⁻","SO₄²⁻","BrO₃⁻"],2,["1−.","1−.","Sulfate is 2−.","1−."]),
+Q("How many oxygen atoms are in one formula unit of Al₂(SO₄)₃?",["4","7","12","3"],2,["That's one sulfate.","That ignores the subscript.","3 sulfates × 4 oxygens = 12.","That's the subscript only."]),
+Q("How many atoms are in one formula unit of (NH₄)₂SO₄?",["7","10","15","9"],2,["That undercounts.","That omits some.","2N + 8H + 1S + 4O = 15.","That undercounts."]),
+Q("What is the formula of sodium bicarbonate?",["NaHCO₃","Na₂CO₃","NaCO₃","NaOH"],0,["Na⁺ plus HCO₃⁻.","That's carbonate.","Charges don't balance.","That's hydroxide."]),
+Q("What is the formula of ammonium nitrate?",["NH₄NO₃","(NH₄)₂NO₃","NH₄(NO₃)₂","NH₃NO₃"],0,["1+ and 1−.","Charges don't balance.","Charges don't balance.","Not ammonium."]),
+Q("What is the formula of calcium acetate?",["CaC₂H₃O₂","Ca(C₂H₃O₂)₂","Ca₂C₂H₃O₂","Ca(CO₃)₂"],1,["2+ and 1−.","Ca²⁺ needs two acetates.","4+ and 1−.","That's carbonate."]),
+Q("What is the formula of lead(II) nitrate?",["PbNO₃","Pb(NO₃)₂","Pb₂NO₃","Pb(NO₂)₂"],1,["2+ and 1−.","Two nitrates for Pb²⁺.","4+ and 1−.","That's nitrite."]),
+Q("What is the formula of sodium phosphate?",["NaPO₄","Na₂PO₄","Na₃PO₄","Na₃(PO₄)₂"],2,["1+ and 3−.","2+ and 3−.","Three Na⁺ balance PO₄³⁻.","Wrong ratio."]),
+Q("What is the formula of copper(II) sulfate?",["CuSO₄","Cu₂SO₄","Cu(SO₄)₂","CuS"],0,["2+ and 2−.","4+ and 2−.","2+ and 4−.","That's sulfide."]),
+Q("What is the formula of magnesium hydroxide?",["MgOH","Mg(OH)₂","Mg₂OH","MgO₂H"],1,["2+ and 1−.","Mg²⁺ needs two OH⁻.","4+ and 1−.","Breaks the ion apart."]),
+Q("What is the formula of lithium carbonate?",["LiCO₃","Li₂CO₃","Li(CO₃)₂","LiHCO₃"],1,["1+ and 2−.","Two Li⁺ for CO₃²⁻.","1+ and 4−.","That's bicarbonate."]),
+Q("What is the formula of aluminum hydroxide?",["AlOH","Al(OH)₃","Al₃OH","Al₂(OH)₃"],1,["3+ and 1−.","Al³⁺ needs three OH⁻.","9+ and 1−.","6+ and 3−."]),
+Q("What is NH₄Cl called?",["Ammonium chloride","Ammonia chloride","Nitrogen chloride","Ammonium chlorate"],0,["NH₄⁺ plus Cl⁻.","Wrong cation name.","Not ionic naming.","That's ClO₃⁻."]),
+Q("What is Na₂SO₃ called?",["Sodium sulfate","Sodium sulfite","Sodium sulfide","Sodium thiosulfate"],1,["That's Na₂SO₄.","SO₃²⁻ is sulfite.","That's Na₂S.","That's Na₂S₂O₃."]),
+Q("What is Mg₃(PO₄)₂ called?",["Magnesium phosphate","Magnesium phosphite","Trimagnesium phosphate","Magnesium phosphide"],0,["PO₄³⁻ is phosphate.","That's PO₃³⁻.","No prefixes in ionic names.","That's P³⁻."]),
+Q("What is KMnO₄ called?",["Potassium manganate","Potassium permanganate","Potassium manganese oxide","Potassium manganite"],1,["That's K₂MnO₄.","MnO₄⁻ is permanganate.","Not correct.","Not standard."]),
+Q("What is Ba(OH)₂ called?",["Barium hydroxide","Barium oxide hydride","Barium dihydroxide","Boron hydroxide"],0,["Ba²⁺ plus OH⁻.","Wrong name.","No prefixes.","Wrong cation."]),
+Q("What is the charge on the dichromate ion?",["1−","2−","3−","1+"],1,["Too small.","Cr₂O₇²⁻.","Too large.","Not a cation."]),
+Q("What is the formula of potassium dichromate?",["KCrO₄","K₂Cr₂O₇","K₂CrO₄","KCr₂O₇"],1,["Wrong ion.","Two K⁺ for Cr₂O₇²⁻.","That's chromate.","Charges don't balance."])
+]},
+{name:"Unit 1: Atomic Structure & Properties",qs:[
+Q("Isotopes of the same element differ in their number of:",["Protons","Neutrons","Electrons","Atomic number"],1,["Protons define the element, so they stay the same.","Isotopes have different neutron counts and so different mass numbers.","Electrons change with charge, not with isotope.","Atomic number is the proton count, which is fixed per element."]),
+Q("An element is 75% mass 35 and 25% mass 37. What is its average atomic mass?",["35.0","35.5","36.0","36.5"],1,["That ignores the contribution of the heavier isotope.","0.75(35) + 0.25(37) = 35.5.","That's the simple average, but you must weight by abundance.","That weights the wrong isotope more heavily."]),
+Q("How many moles are in 22 g of CO₂ (molar mass 44 g/mol)?",["0.50 mol","2.0 mol","22 mol","0.050 mol"],0,["22 g ÷ 44 g/mol = 0.50 mol.","That divides 44 by 22, flipping the ratio.","22 is the mass in grams, not a number of moles.","Decimal slip. 22 ÷ 44 is 0.5, not 0.05."]),
+Q("About how many molecules are in 0.50 mol of a substance?",["6.0 × 10²³","3.0 × 10²³","1.2 × 10²⁴","3.0 × 10²⁴"],1,["That's a full mole. You have half.","0.50 × 6.02 × 10²³ ≈ 3.0 × 10²³.","That's about 2 mol, not 0.5.","Power of ten is off by one."]),
+Q("A mass spectrum of an element mainly shows:",["Bond angles","The relative abundance of its isotopes","Its number of valence electrons","Its melting point"],1,["Bond angles come from structure models, not mass spectra.","Each peak is an isotope's mass and its height is the abundance.","Valence electrons are probed with PES, not mass spectrometry.","Melting point is a physical property, not shown here."]),
+Q("What is the ground-state electron configuration of chlorine (Z = 17)?",["1s²2s²2p⁶3s²3p⁵","1s²2s²2p⁶3s²3p⁶","1s²2s²2p⁶3s²3p³","1s²2s²2p⁶3s²3p⁴"],0,["17 electrons: 2 + 2 + 6 + 2 + 5. Correct.","That totals 18 electrons, which is argon.","That totals 15 electrons, which is phosphorus.","That totals 16 electrons, which is sulfur."]),
+Q("Why is a Na⁺ ion smaller than a Na atom?",["It loses protons","It loses its outermost shell","It gains electrons","Its nuclear charge decreases"],1,["Forming an ion never changes the proton count.","Losing the 3s electron removes the outer shell, so the ion is smaller.","Gaining electrons makes anions, which are larger.","The nucleus is unchanged. Only electrons moved."]),
+Q("In a PES spectrum, the peak at the lowest binding energy comes from:",["1s core electrons","Outermost valence electrons","Neutrons","The nucleus"],1,["Core 1s electrons are held tightest, so they have the highest binding energy.","Valence electrons are easiest to remove, so they appear at lowest binding energy.","PES only measures electrons.","PES does not probe the nucleus."]),
+Q("A compound is 40.0% C, 6.7% H, and 53.3% O by mass. Its empirical formula is:",["CHO","CH₂O","C₂H₄O","CH₄O"],1,["Moles are 3.33 : 6.7 : 3.33, so H is twice C, not equal.","3.33 : 6.7 : 3.33 simplifies to 1 : 2 : 1.","That would be 2 C and 1 O, but the data gives 1 C per 1 O.","H is 2 per C, not 4."]),
+Q("How many protons are in a ³⁷Cl⁻ ion?",["16","17","18","37"],1,["16 is sulfur's proton count.","Protons set the element (Cl = 17) and don't change with charge.","18 is the electron count of Cl⁻, not protons.","37 is the mass number (protons + neutrons)."]),
+Q("How many neutrons are in ³⁷Cl?",["17","18","20","37"],2,["17 is the proton count.","18 would be a mass number of 35.","37 − 17 = 20 neutrons.","37 is the mass number, not the neutron count."]),
+Q("Which change would increase the attraction between a nucleus and an electron?",["Greater distance","Larger nuclear charge at the same distance","Smaller nuclear charge","More shielding"],1,["Coulomb's law: force weakens as distance grows.","Force grows with charge, so more protons pull harder.","Fewer protons means weaker attraction.","Shielding cancels part of the nuclear pull."]),
+Q("Moving left to right across a period, atomic radius generally:",["Increases","Decreases","Stays the same","Doubles"],1,["That's the trend down a group.","Nuclear charge rises while shielding barely changes, pulling the shell in.","It does change, steadily.","No trend doubles the radius."]),
+Q("What is the electron configuration of Fe²⁺?",["[Ar]4s²3d⁴","[Ar]3d⁶","[Ar]4s²3d⁶","[Ar]3d⁵"],1,["Right electron count, but 4s electrons are lost first, not 3d.","Fe is [Ar]4s²3d⁶. Losing two 4s electrons gives [Ar]3d⁶.","That's neutral Fe with 26 electrons.","That's Fe³⁺, which has 23 electrons."]),
+Q("Which atom has the largest radius?",["Na","Mg","Al","Si"],0,["Na is furthest left in period 3, so it has the lowest nuclear charge and the largest radius.","Mg is smaller than Na.","Al is smaller than Mg.","Si is the smallest of these."]),
+Q("Why is Na's second ionization energy far larger than its first?",["The electron comes from the inner core of a Na⁺ ion","Na⁺ has fewer protons","Electron repulsion increases","The electron is farther away"],0,["Na⁺ has a noble-gas core, so the next electron is pulled from a closer, tightly held shell.","Protons never change when electrons are removed.","Repulsion drops after losing an electron.","It's closer to the nucleus, not farther."]),
+Q("Which element has the highest electronegativity?",["Cl","F","O","N"],1,["Cl is high but below F.","F is the most electronegative element.","O ranks second.","N is lower than O and F."]),
+Q("What is the mass of 2.0 mol of H₂O (18 g/mol)?",["9 g","18 g","36 g","2 g"],2,["That divides by 2 instead of multiplying.","That's one mole.","2.0 mol × 18 g/mol = 36 g.","That is just the number of moles, not the mass."]),
+Q("What is the mass percent of oxygen in H₂O (18.0 g/mol)?",["11%","50%","89%","94%"],2,["11% is hydrogen's share.","Oxygen is far heavier than the two H atoms combined.","16.0 ÷ 18.0 ≈ 89%.","Too high. 94% would need more oxygen."]),
+Q("Which species is isoelectronic with Ar?",["Cl⁻","Na⁺","Ne","F⁻"],0,["Cl⁻ has 18 electrons, the same as Ar.","Na⁺ has 10 electrons, like Ne.","Ne has 10 electrons.","F⁻ has 10 electrons."]),
+Q("Compared with red light, blue light photons have:",["Lower energy","Higher energy","The same energy","No energy"],1,["Blue has a higher frequency, so higher energy.","E = hν, so higher frequency means higher energy.","Energy depends on frequency, so they differ.","All photons carry energy."]),
+Q("What is the molar mass of Ca(OH)₂ (Ca 40.1, O 16.0, H 1.0)?",["57.1 g/mol","74.1 g/mol","58.1 g/mol","91.1 g/mol"],1,["That counts only one OH group.","40.1 + 2(16.0 + 1.0) = 74.1.","That doesn't match the formula. Count every atom inside the parentheses.","That counts three OH groups."]),
+Q("How many atoms are in 0.25 mol of helium?",["1.5 × 10²³","6.0 × 10²³","2.4 × 10²⁴","0.25"],0,["0.25 × 6.02 × 10²³ ≈ 1.5 × 10²³.","That's one full mole.","That's 4 mol, not 0.25 mol.","That's the number of moles, not atoms."]),
+Q("A mass spectrum shows ⁶³Cu (69%) and ⁶⁵Cu (31%). What is the average atomic mass?",["63.0","63.6","64.0","64.4"],1,["That ignores the heavier isotope.","0.69(63) + 0.31(65) ≈ 63.6.","That's the unweighted average.","That swaps the abundances."]),
+Q("In a mass spectrum, the tallest peak represents the isotope that is:",["Heaviest","Lightest","Most abundant","Most reactive"],2,["Mass is the x-axis position, not height.","Position shows mass, not height.","Peak height shows relative abundance.","Mass spectrometry doesn't measure reactivity."]),
+Q("What is the mass percent of nitrogen in NH₄NO₃ (80.0 g/mol)?",["17.5%","35.0%","28.0%","50.0%"],1,["That counts only one N atom (14/80).","Two N atoms: 28.0 ÷ 80.0 = 35.0%.","28.0 is the mass, not the percent.","Too high for two N atoms in 80 g."]),
+Q("A compound is 52.9% Al and 47.1% O by mass. Its empirical formula is:",["AlO","Al₂O₃","Al₃O₂","AlO₂"],1,["Moles are about 1.96 Al : 2.94 O, which is 2 : 3, not 1 : 1.","1.96 : 2.94 simplifies to 2 : 3.","That flips the ratio.","That doesn't match the 2 : 3 mole ratio."]),
+Q("A compound has empirical formula CH₂ and molar mass 56 g/mol. Its molecular formula is:",["C₂H₄","C₃H₆","C₄H₈","C₅H₁₀"],2,["That has a molar mass of 28.","That has a molar mass of 42.","CH₂ = 14, and 56 ÷ 14 = 4, so C₄H₈.","That has a molar mass of 70."]),
+Q("A 5.00 g mixture of NaCl and sand leaves 2.00 g of sand after dissolving and filtering. What is the mass percent of NaCl?",["40.0%","60.0%","3.00%","2.50%"],1,["That's the sand's share.","NaCl = 3.00 g, and 3.00 ÷ 5.00 = 60.0%.","That's the mass in grams, not a percent.","That divides the wrong values."]),
+Q("What is the ground-state electron configuration of chromium?",["[Ar]4s²3d⁴","[Ar]4s¹3d⁵","[Ar]3d⁶","[Ar]4s²3d⁵"],1,["That's the expected pattern, but Cr is an exception.","A half-filled 3d subshell is extra stable, so one 4s electron moves.","That has the wrong electron count.","That has 25 electrons, which is manganese."]),
+Q("How many unpaired electrons does a ground-state nitrogen atom have?",["1","2","3","5"],2,["Nitrogen has more than one.","That would be carbon or oxygen.","2p³ has one electron in each of three orbitals.","Only the 2p electrons are unpaired."]),
+Q("How many valence electrons does sulfur have?",["2","4","6","8"],2,["That's group 2.","That's group 14.","Sulfur is in group 16, so 6.","8 is a full octet, not sulfur's count."]),
+Q("Which ion has the configuration 1s²2s²2p⁶?",["Cl⁻","Mg²⁺","K⁺","S²⁻"],1,["Cl⁻ has 18 electrons.","Mg loses 2 electrons to reach 10.","K⁺ has 18 electrons.","S²⁻ has 18 electrons."]),
+Q("In the PES spectrum of boron, the 1s : 2s : 2p peak heights are:",["2 : 2 : 1","2 : 3 : 1","1 : 2 : 2","2 : 2 : 3"],0,["Boron is 1s²2s²2p¹, so the heights are 2 : 2 : 1.","That adds an electron to 2s.","That reverses the pattern.","That gives 2p too many electrons for boron."]),
+Q("In a PES spectrum, the peak at the highest binding energy comes from:",["Valence electrons","1s core electrons","Protons","Neutrons"],1,["Valence electrons have the lowest binding energy.","Core electrons are closest to the nucleus and most tightly held.","PES measures electrons only.","PES measures electrons only."]),
+Q("Which is larger, Cl or Cl⁻?",["Cl⁻, from more electron repulsion","Cl, because it has more protons","They are equal","Cl, because it has more electrons"],0,["Same nuclear charge but one extra electron expands the cloud.","Both have 17 protons.","The extra electron makes a difference.","Cl has fewer electrons than Cl⁻."]),
+Q("Which has the highest first ionization energy?",["Li","Be","B","C"],3,["Lowest of these. It sits on the far left.","Be is high but below C.","B dips below Be.","C has the highest nuclear charge here with similar shielding."]),
+Q("Why is boron's first ionization energy lower than beryllium's?",["Its 2p electron is higher in energy and easier to remove","It has more protons, so it holds electrons less tightly","It has a half-filled subshell","It is larger"],0,["The 2p electron sits above the full 2s and is partly shielded by it.","More protons would raise IE, not lower it.","A half-filled 2p subshell is nitrogen, not boron.","B is actually smaller than Be."]),
+Q("Why do ionic compounds have high melting points?",["Strong attractions between oppositely charged ions","Strong covalent bonds inside each ion","Hydrogen bonding","Weak dispersion forces"],0,["Coulombic attractions throughout the lattice must be overcome.","Ions aren't held by covalent bonds within a lattice.","Hydrogen bonds are weaker than ionic attractions.","Dispersion forces are much weaker."]),
+Q("Which ion is larger, Mg²⁺ or Na⁺?",["Mg²⁺","Na⁺","They are equal","Cannot be determined"],1,["Mg²⁺ has more protons pulling the same 10 electrons.","Same electron count, but fewer protons means a larger radius.","The proton counts differ, so the sizes differ.","Isoelectronic ions compare by nuclear charge."]),
+Q("Group 2 elements typically form ions with a charge of:",["1+","2+","2−","3+"],1,["That's group 1.","They lose two valence electrons.","Metals form cations, not anions.","That's group 13."]),
+Q("How many moles of oxygen atoms are in 1.0 mol of Ca(NO₃)₂?",["2","3","6","9"],2,["That counts the nitrate groups only.","That counts the N atoms' share, not all the O atoms.","2 nitrates × 3 O each = 6.","That multiplies too many times."]),
+Q("What is the mass of 3.0 × 10²³ molecules of O₂ (32 g/mol)?",["8 g","16 g","32 g","64 g"],1,["That's only a quarter mole.","3.0 × 10²³ is 0.50 mol, and 0.50 × 32 = 16 g.","That's a full mole.","That's two moles."]),
+Q("A sample is 20% ¹⁰B (10.0 amu) and 80% ¹¹B (11.0 amu). What is the average atomic mass?",["10.2","10.5","10.8","11.0"],2,["That swaps the abundances.","That's the unweighted average.","0.20(10.0) + 0.80(11.0) = 10.8.","That's only the mass of ¹¹B."]),
+Q("In hydrogen, which transition emits the highest-energy photon?",["n = 3 → 2","n = 4 → 2","n = 5 → 1","n = 2 → 1"],2,["A small energy gap.","Larger gap than 3 → 2, but still small.","The biggest drop in energy levels releases the most energy.","Big, but 5 → 1 is bigger."]),
+Q("How do core electrons affect valence electrons?",["They increase the nuclear charge","They shield them from the nucleus","They have no effect","They are removed first"],1,["Only protons set nuclear charge.","Core electrons repel valence electrons, lowering the effective nuclear charge.","Shielding is a real, important effect.","Valence electrons are removed first."]),
+Q("Which rule says electrons fill empty orbitals of equal energy singly before pairing up?",["Pauli exclusion principle","Hund's rule","Aufbau principle","Heisenberg uncertainty principle"],1,["Pauli says an orbital holds at most two electrons with opposite spins.","Hund's rule spreads electrons out with parallel spins first.","Aufbau gives the filling order of subshells.","That's about measuring position and momentum."]),
+Q("What is the maximum number of electrons in a single orbital?",["1","2","6","8"],1,["An orbital holds a pair.","Two electrons with opposite spins (Pauli).","6 is the capacity of a p subshell.","8 is an octet, not an orbital."]),
+Q("What is the maximum number of electrons in a d subshell?",["5","6","10","14"],2,["That's the number of d orbitals.","That's a p subshell's capacity.","Five orbitals × 2 electrons = 10.","That's an f subshell."]),
+Q("What is the electron configuration of Ca²⁺?",["[Ar]","[Ar]4s²","[Ne]3s²","[Ar]3d²"],0,["Ca loses both 4s electrons, leaving the argon core.","That's neutral Ca.","That's Mg, with 12 electrons.","Ca loses its 4s electrons, not gains 3d."]),
+Q("What is the mass of one Fe atom (55.85 g/mol)?",["9.27 × 10⁻²³ g","55.85 g","1.08 × 10²⁵ g","6.02 × 10²³ g"],0,["55.85 ÷ 6.02 × 10²³ ≈ 9.27 × 10⁻²³ g.","That's a whole mole.","That multiplies by Avogadro's number instead of dividing.","That's Avogadro's number, not a mass."]),
+Q("Which ionic compound has the highest lattice energy?",["NaCl","KBr","MgO","NaF"],2,["Both ions are 1+/1−.","Larger ions and 1+/1− charges give lower lattice energy.","2+ and 2− charges (Coulomb's law) make the strongest attraction.","1+/1− charges, so weaker than MgO."]),
+Q("Which technique recovers a dissolved solid from a solution?",["Filtration","Evaporation","Using a magnet","Decanting only"],1,["Filtration only catches undissolved solids.","Boiling off the solvent leaves the solute behind.","Only works for magnetic solids.","That separates a settled solid, not a dissolved one."]),
+Q("An element has isotopes of 10 amu and 12 amu, and an average mass of 10.5. Which isotope is more abundant?",["10 amu","12 amu","Equal","Cannot tell"],0,["The average sits closer to 10, so the lighter isotope dominates.","The average would be above 11.","Equal abundance would average 11.","The average tells you the weighting."]),
+Q("Two isotopes weigh 79 and 81 amu, and the average is 79.9. What is the percent abundance of the 81 amu isotope?",["20%","45%","55%","80%"],1,["That's too small for an average this close to the middle.","x(81) + (1−x)(79) = 79.9 gives x = 0.45.","That's the abundance of the lighter isotope.","That would give an average near 80.6."]),
+Q("Atomic radius increases down a group because:",["Nuclear charge decreases","Electrons occupy additional shells","Electrons are lost","Shielding decreases"],1,["Nuclear charge increases down a group.","Each period adds a shell farther from the nucleus.","Electrons aren't lost in neutral atoms.","Shielding grows as more core electrons are added."]),
+Q("Which element has the lowest electronegativity?",["Li","Na","K","Cs"],3,["Higher than Cs.","Higher than Cs.","Higher than Cs.","Electronegativity falls down a group, so Cs is lowest here."]),
+Q("What is the percent water in CuSO₄·5H₂O (249.7 g/mol)?",["7.2%","36.1%","18.0%","63.9%"],1,["That's one water only.","5 × 18.02 = 90.1, and 90.1 ÷ 249.7 = 36.1%.","That's the mass of one H₂O, not a percent.","That's the anhydrous salt's percent."]),
+Q("A PES spectrum shows three peaks with relative heights 2 : 2 : 6. Which element is it?",["Carbon","Neon","Magnesium","Fluorine"],1,["Carbon would be 2 : 2 : 2.","1s²2s²2p⁶ matches 2 : 2 : 6.","Magnesium would show a fourth peak for 3s.","Fluorine would be 2 : 2 : 5."]),
+Q("Ionic bonds typically form between:",["Two nonmetals","A metal and a nonmetal","Two metals","Two noble gases"],1,["Nonmetals usually share electrons.","Metals give electrons and nonmetals take them.","Metals bond metallically.","Noble gases rarely bond."])
+]},
+{name:"Unit 2: Compound Structure & Properties",qs:[
+Q("Which bond is the most polar?",["C–H","N–H","C–O","O–H"],3,["Nearly nonpolar: C and H have similar electronegativity.","Polar, but N is less electronegative than O.","Polar, but C–O has a smaller difference than O–H.","O–H has the largest electronegativity difference here."]),
+Q("What is the molecular shape of NH₃?",["Trigonal planar","Trigonal pyramidal","Tetrahedral","Bent"],1,["That needs three bonds and no lone pair.","Three bonds plus one lone pair gives a pyramid.","Tetrahedral is the electron geometry, not the molecular shape.","Bent needs only two bonded atoms."]),
+Q("What is the hybridization of carbon in CH₄?",["sp","sp²","sp³","sp³d"],2,["sp is for two electron domains.","sp² is for three domains.","Four bonding domains means sp³.","sp³d needs five domains."]),
+Q("How many σ and π bonds are in C₂H₄?",["5 σ, 1 π","4 σ, 2 π","6 σ, 0 π","3 σ, 3 π"],0,["4 C–H σ + 1 C–C σ = 5 σ, and the double bond adds 1 π.","A double bond has only one π bond.","That treats the double bond as all σ.","Too many π bonds. Each double bond has one."]),
+Q("Which has the highest melting point?",["CH₄","CO₂","H₂O","NaCl"],3,["Nonpolar, with weak dispersion forces only.","Nonpolar molecular solid with weak forces.","Hydrogen bonds are strong but weaker than ionic lattices.","Ionic lattices need the most energy to break."]),
+Q("Which has the shortest bond between two carbon atoms?",["C–C","C=C","C≡C","All are equal"],2,["Single bonds are longest.","Double bonds are shorter, but not shortest.","More shared pairs pull the nuclei closer.","Bond order changes length."]),
+Q("What is the bond order of N₂?",["1","2","3","4"],2,["That's a single bond.","That's a double bond.","N≡N is a triple bond.","No common bond order is 4."]),
+Q("How many lone pairs are on the oxygen in H₂O?",["0","1","2","3"],2,["Oxygen has 6 valence electrons, 2 used in bonds.","Two pairs remain.","4 nonbonding electrons make 2 pairs.","That would be 6 nonbonding electrons."]),
+Q("What is the molecular shape of CO₂?",["Bent","Linear","Trigonal planar","Tetrahedral"],1,["No lone pairs on C.","Two electron domains give a straight line.","That needs three domains.","That needs four domains."]),
+Q("What is the molecular shape of SF₆?",["Tetrahedral","Trigonal bipyramidal","Octahedral","Square planar"],2,["That's four domains.","That's five domains.","Six bonding domains give an octahedron.","That needs two lone pairs on six domains."]),
+Q("Why is CO₂ nonpolar even though C=O bonds are polar?",["Its bond dipoles cancel due to symmetry","The bonds are nonpolar","Carbon has no electronegativity","It has lone pairs on carbon"],0,["Equal and opposite dipoles in a linear shape cancel.","C=O bonds are polar.","Carbon has an electronegativity of about 2.5.","Carbon has no lone pairs here."]),
+Q("Which molecule is polar?",["CO₂","BF₃","CCl₄","CH₂Cl₂"],3,["Symmetric, so dipoles cancel.","Symmetric trigonal planar, so dipoles cancel.","Symmetric tetrahedral, so dipoles cancel.","Different atoms around C make an uneven dipole."]),
+Q("What is the formal charge on N in NH₄⁺?",["0","+1","−1","+4"],1,["Formal charge = 5 − 0 − 4, which isn't 0.","5 valence − 0 nonbonding − 4 bonds = +1.","That would need extra electrons on N.","That ignores the bonds."]),
+Q("Which species has resonance structures?",["CH₄","NO₃⁻","H₂O","NH₃"],1,["Only single bonds, one structure.","The double bond can be drawn on any of three oxygens.","Only one Lewis structure.","Only one Lewis structure."]),
+Q("What is the approximate H–O–H bond angle in water?",["90°","104.5°","109.5°","120°"],1,["That's for six-domain shapes.","Two lone pairs squeeze the angle below 109.5°.","That's the ideal tetrahedral angle without lone-pair repulsion.","That's trigonal planar."]),
+Q("What is the hybridization of carbon in CO₂?",["sp","sp²","sp³","sp³d"],0,["Two domains means sp.","That needs three domains.","That needs four domains.","That needs five domains."]),
+Q("What is the hybridization of nitrogen in NH₃?",["sp","sp²","sp³","sp³d"],2,["That needs two domains.","That needs three domains.","Three bonds plus a lone pair is four domains, so sp³.","That needs five domains."]),
+Q("Which describes a substitutional alloy such as brass?",["Small atoms sit in gaps","Atoms of similar size replace each other","A compound of nonmetals","Ions in a lattice"],1,["That's an interstitial alloy.","Zinc replaces some copper atoms of similar size.","Alloys contain metals.","That's ionic bonding."]),
+Q("Why do metals conduct electricity?",["Delocalized valence electrons move freely","Ions flow through the lattice","They have free neutrons","Their bonds are covalent"],0,["The 'sea of electrons' carries charge.","Ions are fixed in place in a metal.","Neutrons don't carry charge.","Metals use metallic, not covalent, bonding."]),
+Q("Solid NaCl does not conduct electricity because:",["Its ions are locked in the lattice","It has no ions","It has free electrons","It is covalent"],0,["Ions can't move until molten or dissolved.","It's made of Na⁺ and Cl⁻ ions.","Electrons are not free in an ionic solid.","NaCl is ionic."]),
+Q("How many valence electrons must appear in the Lewis structure of PO₄³⁻?",["29","32","30","24"],1,["5 + 4(6) + 3 = 32, so that is too few.","5 + 24 + 3 for the 3− charge = 32.","That forgets part of the charge.","That omits phosphorus and the charge."]),
+Q("What is the molecular shape of BF₃?",["Trigonal pyramidal","Trigonal planar","Bent","T-shaped"],1,["That needs a lone pair on B.","Three bonding domains and no lone pairs.","That needs two bonded atoms.","That needs lone pairs on five domains."]),
+Q("What is the H–C–H bond angle in CH₄?",["90°","104.5°","109.5°","120°"],2,["That's octahedral.","That's water, with lone pairs.","Four equal bonding domains give a tetrahedron.","That's trigonal planar."]),
+Q("What is the molecular shape of SO₂?",["Linear","Bent","Trigonal planar","Tetrahedral"],1,["There's a lone pair on S, so it isn't linear.","Three domains with one lone pair gives a bent shape.","That's the electron geometry, not the molecular shape.","That needs four domains."]),
+Q("What is the molecular shape of PCl₅?",["Octahedral","Trigonal bipyramidal","Square pyramidal","Tetrahedral"],1,["That's six domains.","Five bonding domains and no lone pairs.","That needs a lone pair on six domains.","That's four domains."]),
+Q("What is the molecular shape of XeF₄?",["Tetrahedral","Square planar","Seesaw","Octahedral"],1,["Xe also has two lone pairs.","Six domains with two lone pairs placed opposite each other.","That's four bonds and one lone pair on five domains.","That is the electron geometry, not the molecular shape."]),
+Q("What is the molecular shape of NO₃⁻?",["Trigonal pyramidal","Trigonal planar","Bent","Tetrahedral"],1,["N has no lone pair here.","Three domains around N with no lone pairs.","That needs a lone pair.","That needs four domains."]),
+Q("How many electron domains surround the central atom in CH₄?",["2","3","4","5"],2,["That's CO₂.","That's BF₃.","Four bonding pairs.","That's PCl₅."]),
+Q("Which has the largest bond angle?",["CH₄","NH₃","H₂O","All are equal"],0,["109.5° with no lone pairs.","About 107°, squeezed by one lone pair.","About 104.5°, squeezed by two.","Lone pairs change the angles."]),
+Q("Which atom can have an expanded octet?",["C","N","O","P"],3,["Period 2 atoms can't exceed 8 electrons.","Period 2 atoms can't exceed 8 electrons.","Period 2 atoms can't exceed 8 electrons.","Period 3 atoms can, as in PCl₅."]),
+Q("How many valence electrons are in CO₂?",["12","16","18","20"],1,["That omits some oxygen electrons.","4 + 6 + 6 = 16.","That adds extra.","That adds extra."]),
+Q("How many valence electrons are in NH₄⁺?",["8","9","10","5"],0,["5 + 4 − 1 = 8, the ion has lost one electron.","That ignores the positive charge.","That adds an electron.","That's N alone."]),
+Q("How many valence electrons are in ClO₃⁻?",["24","26","25","28"],1,["That leaves out the charge.","7 + 18 + 1 = 26.","That forgets the extra electron.","That adds too many."]),
+Q("In CO₃²⁻, what is the formal charge on each single-bonded O?",["0","−1","+1","−2"],1,["That's the double-bonded O.","6 − 6 − 1 = −1.","That would need fewer electrons on O.","That would need 7 nonbonding electrons."]),
+Q("Which bond has the most ionic character?",["C–H","H–Cl","Na–Cl","O–H"],2,["Nearly nonpolar.","Polar covalent.","Metal–nonmetal has the largest electronegativity difference.","Polar covalent."]),
+Q("Which carbon–carbon bond is strongest?",["C–C","C=C","C≡C","All are equal"],2,["The weakest of the three.","Stronger than single, weaker than triple.","More shared pairs mean higher bond energy.","Bond order changes strength."]),
+Q("As bond order increases, bond length ___ and bond energy ___.",["increases, increases","decreases, increases","decreases, decreases","increases, decreases"],1,["Length shrinks with higher order.","Shorter, stronger bonds.","Energy rises with bond order.","Opposite of the actual trend."]),
+Q("Which molecule has a net dipole?",["BF₃","NH₃","CH₄","CO₂"],1,["Symmetric, so dipoles cancel.","The pyramidal shape leaves an unbalanced dipole.","Symmetric tetrahedral.","Symmetric linear."]),
+Q("Why is H₂O polar?",["O–H bonds are nonpolar","Its bent shape prevents dipole cancellation","It has hydrogen bonds","It's ionic"],1,["O–H bonds are polar.","The two bond dipoles add up.","Hydrogen bonding is an IMF, not the cause of molecular polarity.","Water is covalent."]),
+Q("What is the hybridization of each carbon in C₂H₄?",["sp","sp²","sp³","sp³d"],1,["That's for two domains.","Three domains per carbon.","That's four domains.","That's five domains."]),
+Q("What is the hybridization of carbon in HCN?",["sp","sp²","sp³","sp³d"],0,["Two domains around carbon (one H, one N).","That needs three domains.","That needs four domains.","That needs five domains."]),
+Q("How many σ and π bonds are in N₂?",["1 σ, 2 π","2 σ, 1 π","3 σ, 0 π","0 σ, 3 π"],0,["A triple bond is 1 σ plus 2 π.","That's backwards.","Only one σ bond exists between two atoms.","There's always one σ bond."]),
+Q("How is a σ bond formed?",["Sideways overlap of p orbitals","Head-on overlap of orbitals","Transfer of electrons","Hydrogen bonding"],1,["That's a π bond.","Orbitals overlap along the bond axis.","That's ionic bonding.","That's an IMF."]),
+Q("How is a π bond formed?",["Head-on overlap","Sideways overlap of parallel p orbitals","Ion attraction","Metallic bonding"],1,["That's σ.","Above and below the bond axis.","That's ionic.","That's metallic."]),
+Q("If you double both ion charges at fixed distance, the Coulombic force changes by a factor of:",["2","4","8","16"],1,["It's the product of charges.","2 × 2 = 4.","That overcounts.","That overcounts."]),
+Q("Which has the higher melting point?",["NaF","NaI","Equal","Cannot compare"],0,["F⁻ is smaller, so ions sit closer and attract more.","I⁻ is larger, so attraction is weaker.","Their ion sizes differ.","Coulomb's law lets you compare."]),
+Q("Why are ionic solids brittle?",["Shifting layers lines up like charges that repel","Their ions are mobile","They have delocalized electrons","They are molecular"],0,["A small shift causes repulsion and cracking.","Ions are fixed in a solid.","That describes metals.","Ionic solids are lattices."]),
+Q("Why are metals malleable?",["Layers slide while delocalized electrons keep them bonded","They contain ionic bonds","Their atoms are molecules","They have weak IMFs only"],0,["Bonding isn't broken, so it just deforms.","Metals use metallic bonding.","Metals are not molecules.","Metallic bonding is strong."]),
+Q("Which is a network covalent solid?",["CO₂","SiO₂","H₂O","NaCl"],1,["Molecular.","Si and O form a continuous covalent network.","Molecular.","Ionic."]),
+Q("Why does graphite conduct while diamond does not?",["Graphite has delocalized electrons","Graphite has ions","Diamond is metallic","Graphite has free neutrons"],0,["Layers of sp² carbon have mobile electrons.","Both are pure carbon.","Diamond is covalent network.","Neutrons don't carry current."]),
+Q("Why do molecular solids have low melting points?",["Weak IMFs between molecules","Strong covalent bonds","Ionic lattice","Metallic bonds"],0,["Only IMFs break, not covalent bonds.","Covalent bonds stay intact on melting.","That's ionic.","That's metallic."]),
+Q("In steel, the small carbon atoms:",["Replace iron atoms","Fit in gaps between iron atoms","Form ionic bonds with iron","Float freely"],1,["That's substitutional.","This is an interstitial alloy.","Alloys are metallic.","They're held in the lattice."]),
+Q("How many lone pairs are on N in NH₃?",["0","1","2","3"],1,["N has 5 valence electrons and uses 3.","One pair remains.","That would be oxygen in water.","That's too many."]),
+Q("Which species has an odd number of electrons?",["CO₂","NO","H₂O","N₂"],1,["16 valence electrons.","5 + 6 = 11 valence electrons.","8 valence electrons.","10 valence electrons."]),
+Q("What is the hybridization of P in PCl₅?",["sp³","sp³d","sp³d²","sp²"],1,["That's four domains.","Five domains means sp³d.","That's six domains.","That's three domains."]),
+Q("In H–Cl, which atom carries the partial negative charge?",["H","Cl","Both","Neither"],1,["Hydrogen is less electronegative.","Cl pulls the shared pair closer.","The bond is polar.","The bond is polar."]),
+Q("Which has the largest electronegativity difference?",["H–F","H–Cl","H–Br","H–I"],0,["F is the most electronegative.","Smaller difference.","Smaller difference.","Smallest difference."]),
+Q("What is the molecular shape of H₂S?",["Linear","Bent","Trigonal planar","Tetrahedral"],1,["Two lone pairs prevent this.","Two bonds, two lone pairs.","Needs three domains.","That's the electron geometry."]),
+Q("What is the molecular shape of CCl₄?",["Square planar","Tetrahedral","Trigonal pyramidal","Octahedral"],1,["Needs lone pairs.","Four bonding pairs.","Needs a lone pair.","Needs six domains."]),
+Q("Which has a trigonal pyramidal shape?",["BF₃","PCl₃","CO₂","CH₄"],1,["Trigonal planar.","Three bonds plus one lone pair.","Linear.","Tetrahedral."])
+]},
+{name:"Unit 3: Properties of Substances & Mixtures",qs:[
+Q("What is the strongest intermolecular force in liquid HF?",["London dispersion","Dipole-dipole","Hydrogen bonding","Ionic bonding"],2,["Present, but weaker than other forces here.","Present, but H bonding is stronger.","H bonded to F is the textbook hydrogen-bond case.","Ionic bonds are not intermolecular forces in a molecular liquid."]),
+Q("Which has the highest boiling point?",["CH₄","C₂H₆","C₃H₈","C₄H₁₀"],3,["Smallest electron cloud, weakest dispersion.","Larger than CH₄ but not the largest.","Close, but there's a bigger one.","The largest electron cloud gives the strongest dispersion forces."]),
+Q("At constant P and n, doubling a gas's Kelvin temperature makes its volume:",["Halve","Stay the same","Double","Quadruple"],2,["That would be the inverse relationship.","Volume depends on T at constant P.","V ∝ T (Charles's law), so it doubles.","Volume is linear in T, not squared."]),
+Q("What is the molarity of 0.50 mol NaCl in 250 mL of solution?",["0.50 M","1.0 M","2.0 M","0.125 M"],2,["That ignores the volume.","You must convert 250 mL to 0.250 L.","0.50 mol ÷ 0.250 L = 2.0 M.","That divides by 4 instead of 0.25 L."]),
+Q("In Beer's law, absorbance is:",["Inversely proportional to concentration","Directly proportional to concentration","Proportional to concentration squared","Unrelated to concentration"],1,["Higher concentration absorbs more light.","A = εbc, so A is directly proportional to c.","The relationship is linear, not squared.","Spectrophotometry relies on the link between them."]),
+Q("Which substance can form hydrogen bonds with itself?",["CH₄","CH₃OH","CH₃Cl","C₂H₆"],1,["No H on N, O or F.","H is bonded to O, so hydrogen bonding is possible.","H is bonded to C only.","H is bonded to C only."]),
+Q("Dispersion forces generally get stronger with:",["Smaller electron clouds","Larger, more polarizable electron clouds","Lower molar mass","More ionic character"],1,["Smaller clouds are less polarizable.","Larger clouds distort more easily.","Heavier molecules usually have stronger dispersion forces.","Dispersion forces exist in all substances."]),
+Q("Why does H₂O boil at a higher temperature than H₂S?",["Water has hydrogen bonding","Water has a higher molar mass","H₂S is ionic","Water has stronger covalent bonds"],0,["O–H···O hydrogen bonds are strong.","H₂S is actually heavier.","Both are molecular.","Boiling doesn't break covalent bonds."]),
+Q("Which noble gas has the highest boiling point?",["Ne","Ar","Kr","Xe"],3,["Smallest cloud.","Larger than Ne.","Larger than Ar.","Largest cloud, strongest dispersion."]),
+Q("Stronger intermolecular forces generally give a liquid:",["Lower viscosity","Higher viscosity","Lower boiling point","Higher vapor pressure"],1,["Opposite effect.","Molecules resist flowing past each other.","They give a higher boiling point.","They give a lower vapor pressure."]),
+Q("A liquid with stronger IMFs has a vapor pressure that is:",["Higher","Lower","Unchanged","Zero"],1,["Molecules escape less easily.","Fewer molecules enter the gas phase.","IMFs directly affect it.","All liquids have some vapor pressure."]),
+Q("A liquid boils when its vapor pressure equals:",["Zero","The external pressure","Atmospheric humidity","Its density"],1,["That would be absolute zero.","Bubbles can form when internal and external pressure match.","Not relevant.","Not relevant."]),
+Q("What is the main IMF in liquid HCl?",["Hydrogen bonding","Dipole-dipole","Ionic","Metallic"],1,["Cl isn't N, O or F.","HCl is polar.","It's molecular.","It's not a metal."]),
+Q("What force attracts Na⁺ to water molecules?",["Ion-dipole","Hydrogen bonding only","Dispersion only","Covalent"],0,["Ion attracted to the partial charge on O.","H bonding involves H on N, O or F.","Dispersion is weaker than ion-dipole.","No bond is formed."]),
+Q("Which dissolves best in nonpolar hexane?",["NaCl","I₂","KBr","Glucose"],1,["Ionic.","Nonpolar solute, like dissolves like.","Ionic.","Highly polar."]),
+Q("Why is ethanol miscible with water?",["Both can hydrogen bond","Both are ionic","Both are nonpolar","Ethanol is a metal"],0,["–OH groups form hydrogen bonds.","Both are molecular.","Both are polar.","Ethanol is molecular."]),
+Q("At constant T, doubling the pressure of a gas makes its volume:",["Double","Halve","Stay the same","Quadruple"],1,["That would lower the pressure.","P and V are inversely related (Boyle).","Volume changes with pressure.","Not a squared relationship."]),
+Q("How many moles are in a gas at 2.0 atm, 10.0 L and 300 K? (R = 0.0821)",["0.81 mol","1.2 mol","6.0 mol","0.12 mol"],0,["n = PV/RT = 20 ÷ 24.6 = 0.81.","That's the inverse.","That ignores R and T.","Decimal slip."]),
+Q("At the same T and P, which gas is densest?",["He","H₂","N₂","CO₂"],3,["Lightest of these.","Very light.","Lighter than CO₂.","Highest molar mass (44 g/mol)."]),
+Q("Compared with O₂, H₂ effuses:",["Slower","Faster","At the same rate","Not at all"],1,["It's much lighter.","Lighter molecules move faster at the same T.","Rates depend on molar mass.","All gases effuse."]),
+Q("According to kinetic molecular theory, temperature is a measure of:",["Average kinetic energy","Total mass","Molecular volume","Pressure only"],0,["Higher T means higher average KE.","Mass is not temperature.","Not related.","Pressure depends on more than T."]),
+Q("At the same temperature, He and Xe gas particles have:",["The same average kinetic energy","He has more","Xe has more","Zero kinetic energy"],0,["KE depends only on T.","He moves faster but is lighter, so KE is equal.","Xe moves slower but is heavier.","Gas particles always move."]),
+Q("Real gases deviate most from ideal behavior at:",["High T and low P","Low T and high P","High T and high P","Low P only"],1,["Ideal behavior is best here.","Particles are close together and IMFs matter.","High T reduces deviations.","Low P reduces deviations."]),
+Q("A mixture has 1.0 mol He and 3.0 mol Ne at a total pressure of 2.0 atm. What is He's partial pressure?",["0.50 atm","1.0 atm","1.5 atm","2.0 atm"],0,["1/4 × 2.0 = 0.50.","That would be half the mixture.","That's Ne's partial pressure.","That's the total."]),
+Q("A gas collected over water has P_total = 760 mmHg and P_water = 24 mmHg. The dry gas pressure is:",["784 mmHg","760 mmHg","736 mmHg","24 mmHg"],2,["You subtract, not add.","That includes water vapor.","760 − 24 = 736.","That's only the water vapor."]),
+Q("How many moles are in 11.2 L of an ideal gas at STP?",["0.25 mol","0.50 mol","1.0 mol","2.0 mol"],1,["That would be 5.6 L.","11.2 ÷ 22.4 = 0.50.","That's 22.4 L.","That's 44.8 L."]),
+Q("At constant volume, doubling a gas's Kelvin temperature makes its pressure:",["Double","Halve","Stay the same","Quadruple"],0,["P ∝ T at constant V.","That's the inverse.","Pressure changes with T.","Not squared."]),
+Q("50.0 mL of 2.0 M solution is diluted to 200.0 mL. What is the new molarity?",["0.50 M","1.0 M","4.0 M","8.0 M"],0,["M₁V₁ = M₂V₂ gives 100 ÷ 200 = 0.50.","That would only halve it.","Dilution lowers concentration.","Dilution lowers concentration."]),
+Q("How many moles of solute are in 0.250 L of 0.40 M solution?",["0.10 mol","1.6 mol","0.16 mol","2.5 mol"],0,["0.40 × 0.250 = 0.10.","That divides instead of multiplies.","Slip in arithmetic.","That divides L by M."]),
+Q("What mass of NaCl (58.5 g/mol) is needed for 500 mL of 0.10 M solution?",["2.9 g","5.9 g","29 g","0.29 g"],0,["0.050 mol × 58.5 = 2.9 g.","That's for 1 L.","That ignores the factor of 0.1.","Decimal slip."]),
+Q("Which compound is soluble in water?",["AgCl","PbSO₄","CaCO₃","NaNO₃"],3,["Insoluble halide.","Insoluble sulfate.","Insoluble carbonate.","All nitrates are soluble."]),
+Q("What is the mass percent of NaCl when 5.0 g is dissolved in 95 g of water?",["5.0%","5.3%","19%","95%"],0,["5.0 ÷ 100 × 100 = 5.0%.","That divides by 95 g only.","That divides by 5 g.","That's the water's share."]),
+Q("What is the concentration of Cl⁻ in 0.10 M CaCl₂?",["0.050 M","0.10 M","0.20 M","0.30 M"],2,["That halves it.","Each formula unit gives two Cl⁻.","2 × 0.10 = 0.20 M.","That counts all ions."]),
+Q("Which 0.10 M solution conducts electricity best?",["Sucrose","NaCl","CaCl₂","Ethanol"],2,["Nonelectrolyte.","2 ions per formula unit.","3 ions per formula unit.","Nonelectrolyte."]),
+Q("As temperature rises, the solubility of a gas in water generally:",["Increases","Decreases","Stays the same","Doubles"],1,["Warm soda goes flat.","Gas escapes more easily when warm.","Temperature matters.","No such rule."]),
+Q("Which type of radiation has the highest energy?",["Radio","Infrared","Visible","Ultraviolet"],3,["Lowest of these.","Lower than visible.","Lower than UV.","UV has the shortest wavelength here."]),
+Q("Infrared spectroscopy provides information about:",["Molecular vibrations","Nuclear decay","Electron transitions","Isotope masses"],0,["IR photons make bonds vibrate.","That's radioactivity.","That's UV-Vis.","That's mass spectrometry."]),
+Q("UV-Vis spectroscopy mainly involves:",["Electronic transitions","Bond vibrations","Nuclear spin","Rotations only"],0,["UV and visible photons excite electrons.","That's IR.","That's NMR.","That's microwave."]),
+Q("If frequency increases, wavelength:",["Increases","Decreases","Stays the same","Doubles"],1,["They're inversely related.","c = λν, so λ falls.","They are linked.","Not fixed."]),
+Q("If a photon's frequency doubles, its energy:",["Halves","Doubles","Quadruples","Stays the same"],1,["Opposite.","E = hν.","Not squared.","Energy depends on frequency."]),
+Q("A solution has absorbance 0.40 at 0.10 M. What is its absorbance at 0.20 M?",["0.20","0.40","0.80","1.6"],2,["That halves it.","That ignores the change.","A is proportional to c, so it doubles.","That's too large."]),
+Q("A solution appears blue. It mostly absorbs:",["Blue light","Orange/red light","Violet light","Green light"],1,["Blue is transmitted, not absorbed.","The color it looks is the light that passes through.","Violet is next to blue and passes through.","Green is not the complement."]),
+Q("In the photoelectric effect, a photon with energy below the work function:",["Ejects an electron","Ejects no electrons","Ejects slower electrons","Ejects more electrons"],1,["It lacks enough energy.","Below the threshold, nothing is ejected regardless of intensity.","No electron is ejected at all.","Intensity doesn't help."]),
+Q("In chromatography with a polar stationary phase and nonpolar solvent, a polar compound moves:",["Farther","Less far","The same","Backward"],1,["It sticks to the polar phase.","Stronger attraction to the stationary phase slows it.","Polarity affects it.","It still moves forward, just slower."]),
+Q("Which has the higher boiling point?",["CH₃OCH₃","CH₃CH₂OH","Equal","Cannot tell"],1,["No O–H bond, so no hydrogen bonding.","Ethanol has an O–H group and hydrogen bonds.","Their IMFs differ.","IMFs tell you."]),
+Q("Which IMF is typically strongest?",["Dispersion","Dipole-dipole","Hydrogen bonding","All are equal"],2,["Weakest in small molecules.","Weaker than hydrogen bonding.","H bonds are the strongest of the three molecular IMFs.","They differ in strength."]),
+Q("Why is I₂ a solid at room temperature while F₂ is a gas?",["I₂ has stronger dispersion forces","I₂ is ionic","F₂ is polar","I₂ has hydrogen bonds"],0,["Larger electron clouds mean stronger dispersion.","Both are molecular.","Both are nonpolar.","No H is present."]),
+Q("Which is more soluble in water?",["CH₃OH","CH₃CH₂CH₂CH₂CH₂OH","Equal","Neither dissolves"],0,["The short chain keeps the molecule mostly polar.","The long nonpolar chain reduces solubility.","Chain length matters.","Methanol is miscible."]),
+Q("On a heating curve, the flat segments represent:",["Temperature rising","Phase changes","Heat leaving","Chemical reactions"],1,["That's the sloped segments.","Heat goes into overcoming IMFs.","Heat is being added.","Nothing reacts."]),
+Q("During melting at constant temperature, added heat increases the:",["Kinetic energy","Potential energy","Temperature","Mass"],1,["Temperature, and thus KE, stays constant.","Particles move apart, which raises potential energy.","T is constant.","Mass doesn't change."]),
+Q("What does the triple point on a phase diagram represent?",["Where solid, liquid and gas coexist","Where the liquid boils at 1 atm","Where gas turns to plasma","The critical point"],0,["All three phases are in equilibrium.","That's the normal boiling point.","Not shown on this diagram.","That's a different point."]),
+Q("At a liquid's normal boiling point, its vapor pressure equals:",["0 atm","1 atm","2 atm","Its density"],1,["That's the opposite.","Normal means standard pressure of 1 atm.","Not standard.","Not relevant."]),
+Q("When temperature increases, the Maxwell–Boltzmann curve:",["Shifts right and flattens","Shifts left and narrows","Does not change","Splits in two"],0,["More particles reach higher speeds.","Lower T does that.","Distribution changes with T.","It stays one curve."]),
+Q("At the same temperature, which gas has the lowest average speed?",["He","Ne","Ar","Xe"],3,["Fastest.","Slow, but faster than Xe.","Slow, but faster than Xe.","Heaviest, so slowest."]),
+Q("A gas has density 1.43 g/L at STP. What is its molar mass?",["16 g/mol","28 g/mol","32 g/mol","44 g/mol"],2,["1.43 × 22.4 ≈ 32, so this is too low.","That's too low.","1.43 g/L × 22.4 L/mol ≈ 32 g/mol.","That's too high."]),
+Q("What volume does 22 g of CO₂ (44 g/mol) occupy at STP?",["5.6 L","11.2 L","22.4 L","44.8 L"],1,["That's 0.25 mol.","0.50 mol × 22.4 L/mol = 11.2 L.","That's 1.0 mol.","That's 2.0 mol."]),
+Q("In 2H₂ + O₂ → 2H₂O, 4.0 L of H₂ at fixed T and P reacts with how much O₂?",["1.0 L","2.0 L","4.0 L","8.0 L"],1,["That's half again.","Volumes follow the 2 : 1 mole ratio.","That ignores the ratio.","That doubles instead of halves."]),
+Q("A gas has V = 2.0 L at 300 K and constant P. If heated to 600 K, the new volume is:",["1.0 L","2.0 L","4.0 L","8.0 L"],2,["That's the inverse.","Temperature affects volume.","V ∝ T, so it doubles.","Too large."]),
+Q("What is the ratio of effusion rates, H₂ to He?",["0.71","1.0","1.41","2.0"],2,["That's He to H₂.","Their molar masses differ.","√(4.0/2.0) ≈ 1.41.","That isn't the square root."]),
+Q("Air is 78% N₂. At 1.0 atm total, what is N₂'s partial pressure?",["0.22 atm","0.78 atm","1.0 atm","78 atm"],1,["That's the rest of air.","Mole fraction × total pressure.","That's the total.","That forgets the percent."]),
+Q("A mixture has 0.50 atm N₂, 0.30 atm O₂ and 0.20 atm Ar. What is the total pressure?",["0.30 atm","0.50 atm","1.0 atm","10 atm"],2,["That's only O₂.","That's only N₂.","Partial pressures add.","That multiplies instead of adds."]),
+Q("Which gas behaves most ideally at room temperature?",["He","NH₃","H₂O vapor","CO₂"],0,["Small and nearly no IMFs.","Hydrogen bonding makes it nonideal.","Strong IMFs.","Larger and more polarizable."]),
+Q("In an aqueous solution of CH₃OH, methanol exists as:",["Intact molecules","Ions","Atoms","Solid crystals"],0,["It dissolves but doesn't dissociate.","It's a nonelectrolyte.","Not broken apart.","It's dissolved."]),
+Q("Which is a strong electrolyte?",["Glucose","NaCl","Ethanol","Sucrose"],1,["Molecular.","Ionic and fully dissociates.","Molecular.","Molecular."]),
+Q("What is the molarity of a solution with 11.7 g NaCl (58.5 g/mol) in 500 mL?",["0.20 M","0.40 M","0.80 M","2.0 M"],1,["That ignores the volume.","0.20 mol ÷ 0.500 L = 0.40 M.","That's off by a factor of 2.","That's for 100 mL."]),
+Q("How much 6.0 M HCl is needed to make 300 mL of 1.0 M HCl?",["18 mL","50 mL","180 mL","1800 mL"],1,["That's the wrong arithmetic.","V₁ = (1.0 × 300) ÷ 6.0 = 50 mL.","That's six times too much.","That's far too much."]),
+Q("Which compound is insoluble in water?",["KCl","(NH₄)₂SO₄","BaSO₄","NaOH"],2,["Group 1 salts are soluble.","Ammonium salts are soluble.","Barium sulfate is a classic insoluble sulfate.","Group 1 hydroxides are soluble."]),
+Q("Which is a homogeneous mixture?",["Sand in water","Salt water","Oil and water","Granite"],1,["Visible particles.","Uniform throughout.","Separates into layers.","Visibly mixed grains."]),
+Q("Distillation separates liquids by differences in:",["Color","Boiling point","Density only","Mass of container"],1,["Not a basis of separation.","The lower-boiling liquid vaporizes first.","Boiling point is the key.","Not relevant."]),
+Q("In chromatography, Rf equals the distance moved by the compound divided by:",["Distance moved by the solvent front","Mass of the compound","Total paper length","Time elapsed"],0,["It's a distance ratio.","Mass isn't used.","The paper's length isn't used.","Time isn't used."]),
+Q("If A = 0.60 at 0.30 M, what concentration gives A = 0.20 (same cell)?",["0.050 M","0.10 M","0.20 M","0.60 M"],1,["That's off.","A/c is constant, so c = 0.30 × (0.20/0.60) = 0.10 M.","That would give A = 0.40.","That gives A = 1.2."]),
+Q("A Beer's law plot of absorbance vs concentration is:",["A straight line through the origin","A curve downward","A horizontal line","A parabola"],0,["A = εbc is linear.","Beer's law is linear.","A changes with c.","Not quadratic."]),
+Q("Why use the wavelength of maximum absorbance in Beer's law work?",["It gives the greatest sensitivity","It changes color","It removes the solvent","It lowers temperature"],0,["Small concentration changes give big absorbance changes.","The color doesn't change.","It doesn't affect the solvent.","It doesn't change temperature."]),
+Q("Which visible light has the lowest photon energy?",["Red","Green","Blue","Violet"],0,["Longest wavelength, lowest energy.","Higher than red.","Higher than green.","Highest of these."]),
+Q("Above the threshold frequency, increasing light intensity increases:",["The number of electrons ejected","Each electron's kinetic energy","The work function","The wavelength"],0,["More photons eject more electrons.","KE depends on frequency.","That's a property of the metal.","Intensity doesn't change wavelength."]),
+Q("Above the threshold frequency, increasing frequency increases:",["The kinetic energy of ejected electrons","The number of photons","The work function","The mass of the metal"],0,["Extra photon energy goes into KE.","That depends on intensity.","That's fixed.","It doesn't change."]),
+Q("Microwave radiation mainly causes:",["Molecular rotation","Electron ejection","Nuclear fission","Bond breaking"],0,["Low-energy microwaves rotate polar molecules.","That needs far higher energy.","Not relevant.","It's too low in energy."]),
+Q("Atomic emission spectra show lines because:",["Energy levels are quantized","Electrons are lost","Atoms are ionic","Nuclei decay"],0,["Only specific photon energies are emitted.","Electrons stay in the atom.","Not relevant.","Not relevant."]),
+Q("If transmittance increases, absorbance:",["Increases","Decreases","Stays constant","Doubles"],1,["Opposite.","More light passing through means less is absorbed.","They are linked.","No such rule."]),
+Q("Which has the highest vapor pressure at 25 °C?",["Water","Ethanol","Diethyl ether","Glycerol"],2,["Strong hydrogen bonding lowers vapor pressure.","Hydrogen bonds hold it back.","Weak IMFs let molecules escape easily.","Extensive hydrogen bonding makes it very low."])
+]},
+{name:"Unit 4: Chemical Reactions",qs:[
+Q("For 2H₂ + O₂ → 2H₂O, with 3 mol H₂ and 2 mol O₂, which is limiting?",["H₂","O₂","H₂O","Neither"],0,["3 mol H₂ needs only 1.5 mol O₂, so H₂ runs out first.","O₂ is in excess.","Water is a product.","The amounts are not in a 2:1 ratio, so one limits."]),
+Q("What is the net ionic equation when AgNO₃ and NaCl solutions mix?",["Na⁺ + NO₃⁻ → NaNO₃","Ag⁺ + Cl⁻ → AgCl(s)","AgNO₃ + NaCl → AgCl + NaNO₃","No reaction occurs"],1,["NaNO₃ is soluble, so those ions stay dissolved.","Only the precipitate-forming ions appear in the net equation.","That's the molecular equation, not net ionic.","AgCl is insoluble, so a precipitate forms."]),
+Q("What is the oxidation number of Mn in MnO₄⁻?",["+4","+5","+6","+7"],3,["That's MnO₂.","That would give a total charge of 3−.","That's MnO₄²⁻.","4(−2) + Mn = −1, so Mn = +7."]),
+Q("In Zn + Cu²⁺ → Zn²⁺ + Cu, which species is oxidized?",["Zn","Cu²⁺","Zn²⁺","Cu"],0,["Zn loses electrons (0 to +2), so it's oxidized.","Cu²⁺ gains electrons, so it's reduced.","Zn²⁺ is the product of oxidation.","Cu is the product of reduction."]),
+Q("The theoretical yield is 10.0 g and you collect 8.0 g. What is the percent yield?",["8%","80%","125%","20%"],1,["Decimal slip.","8.0 ÷ 10.0 × 100 = 80%.","That divides theoretical by actual.","That's the percent lost, not the yield."]),
+Q("What is the coefficient of O₂ when C₃H₈ + O₂ → CO₂ + H₂O is balanced?",["3","4","5","7"],2,["That balances only the carbon.","That doesn't balance the oxygen.","C₃H₈ + 5O₂ → 3CO₂ + 4H₂O.","That's too many oxygens."]),
+Q("A balanced equation shows conservation of:",["Atoms and mass","Only volume","Only charge","Moles of every substance"],0,["Atoms are neither created nor destroyed.","Volume isn't conserved in general.","Charge matters, but atoms matter first.","Mole totals can change."]),
+Q("2Na + Cl₂ → 2NaCl is what type of reaction?",["Synthesis","Decomposition","Combustion","Double replacement"],0,["Two reactants combine into one product.","That is one reactant splitting.","No oxygen reacts.","That swaps partners."]),
+Q("CaCO₃ → CaO + CO₂ is what type of reaction?",["Synthesis","Decomposition","Combustion","Single replacement"],1,["That combines reactants.","One reactant breaks into several products.","No O₂ reactant.","No element replaces another."]),
+Q("CH₄ + 2O₂ → CO₂ + 2H₂O is what type of reaction?",["Combustion","Synthesis","Decomposition","Double replacement"],0,["A hydrocarbon burns in O₂.","More than one product forms.","More than one reactant is present.","No partners swap."]),
+Q("Zn + 2HCl → ZnCl₂ + H₂ is what type of reaction?",["Single replacement","Double replacement","Synthesis","Decomposition"],0,["Zn replaces H in the compound.","Two compounds don't swap partners.","More than one product forms.","More than one reactant."]),
+Q("AgNO₃ + NaCl → AgCl + NaNO₃ is what type of reaction?",["Double replacement","Single replacement","Combustion","Synthesis"],0,["The cations and anions swap partners.","No free element appears.","No O₂ reactant.","Two products form."]),
+Q("How many moles of CO₂ form from 2.0 mol C₃H₈ burning completely?",["2.0","3.0","6.0","8.0"],2,["That ignores the ratio.","That's the ratio for 1 mol.","1 : 3 ratio gives 6.0 mol.","That's the moles of water."]),
+Q("What mass of H₂O forms from 4.0 g H₂ with excess O₂?",["18 g","36 g","72 g","4.0 g"],1,["That's 1 mol.","4.0 g H₂ is about 2 mol, giving about 2 mol H₂O = 36 g.","That's twice too much.","Mass is not conserved per substance."]),
+Q("In N₂ + 3H₂ → 2NH₃, how many grams of NH₃ come from 1.0 mol N₂ with excess H₂?",["17 g","34 g","68 g","28 g"],1,["That's 1 mol NH₃.","1 mol N₂ gives 2 mol NH₃ = 34 g.","That's 4 mol NH₃.","That's the mass of N₂."]),
+Q("In AgNO₃ + NaCl → AgCl + NaNO₃, which is a spectator ion?",["Ag⁺","Cl⁻","Na⁺","AgCl"],2,["Ag⁺ forms the solid.","Cl⁻ forms the solid.","Na⁺ stays dissolved before and after.","That's the precipitate."]),
+Q("Which precipitate forms when Pb(NO₃)₂ and KI mix?",["KNO₃","PbI₂","Pb","K₂I"],1,["That's soluble.","Lead(II) iodide is a yellow solid.","Not formed.","Wrong formula."]),
+Q("What is the net ionic equation for HCl + NaOH → NaCl + H₂O?",["H⁺ + OH⁻ → H₂O","Na⁺ + Cl⁻ → NaCl","HCl → H⁺ + Cl⁻","NaOH → Na⁺ + OH⁻"],0,["Only the neutralization appears.","NaCl stays dissolved.","That's dissociation only.","That's dissociation only."]),
+Q("Which is a strong base?",["NH₃","NaOH","CH₃COOH","HF"],1,["Weak base.","Group 1 hydroxides fully dissociate.","That's an acid.","That's an acid."]),
+Q("Which is a weak acid?",["HCl","HNO₃","HF","H₂SO₄"],2,["Strong acid.","Strong acid.","Only partly dissociates.","Strong in its first dissociation."]),
+Q("How many mL of 0.100 M NaOH neutralize 25.0 mL of 0.100 M HCl?",["12.5","25.0","50.0","100"],1,["That halves it.","1 : 1 ratio at equal molarity.","That doubles it.","That quadruples it."]),
+Q("20.0 mL of 0.200 M NaOH neutralizes 40.0 mL of HCl. What is the HCl molarity?",["0.050 M","0.100 M","0.200 M","0.400 M"],1,["Too low.","0.00400 mol ÷ 0.0400 L = 0.100 M.","That ignores the volume difference.","That multiplies by 2."]),
+Q("The point where an indicator changes color in a titration is the:",["Endpoint","Starting point","Equivalence point only","Triple point"],0,["It approximates the equivalence point.","Not the start.","The two are close but distinct.","That's a phase diagram term."]),
+Q("What is the oxidation number of S in H₂SO₄?",["+2","+4","+6","−2"],2,["Too low.","That's sulfite.","2(+1) + S + 4(−2) = 0, so S = +6.","That's sulfide."]),
+Q("What is the oxidation number of Cr in Cr₂O₇²⁻?",["+3","+6","+7","+12"],1,["That's Cr³⁺.","2Cr + 7(−2) = −2, so Cr = +6.","That's Mn in MnO₄⁻.","That's the sum, not per atom."]),
+Q("What is the oxidation number of N in NH₃?",["+3","−3","0","+5"],1,["That's N in nitrite.","3(+1) + N = 0, so N = −3.","That's elemental N₂.","That's N in nitrate."]),
+Q("What is the oxidation number of O in H₂O₂?",["−2","−1","0","+1"],1,["Normal oxides use −2.","Peroxides have −1.","Elemental O₂ is 0.","Not for oxygen here."]),
+Q("In 2Na + Cl₂ → 2NaCl, which substance is reduced?",["Na","Cl₂","NaCl","None"],1,["Na goes 0 to +1 (oxidized).","Cl goes 0 to −1 (gains electrons).","It's the product.","Electrons transfer."]),
+Q("In Zn + Cu²⁺ → Zn²⁺ + Cu, the oxidizing agent is:",["Zn","Cu²⁺","Zn²⁺","Cu"],1,["That's the reducing agent.","It accepts electrons, causing oxidation.","It's a product.","It's a product."]),
+Q("In Zn + Cu²⁺ → Zn²⁺ + Cu, the reducing agent is:",["Zn","Cu²⁺","Zn²⁺","Cu"],0,["Zn gives up electrons.","That's the oxidizing agent.","It's a product.","It's a product."]),
+Q("Reduction is the:",["Loss of electrons","Gain of electrons","Loss of protons","Gain of neutrons"],1,["That's oxidation.","'OIL RIG': Reduction Is Gain.","Not involved.","Not involved."]),
+Q("Which is a redox reaction?",["NaOH + HCl → NaCl + H₂O","AgNO₃ + NaCl → AgCl + NaNO₃","2Mg + O₂ → 2MgO","CaCl₂ + Na₂CO₃ → CaCO₃ + 2NaCl"],2,["Acid-base, no oxidation numbers change.","Precipitation, no change.","Mg goes 0 to +2 and O goes 0 to −2.","Precipitation, no change."]),
+Q("For 2A + B → C with excess B, how many mol of C form from 5.0 mol A?",["2.5","5.0","7.5","10.0"],0,["5.0 × (1/2) = 2.5 mol.","That ignores the ratio.","That's too many.","That doubles instead of halves."]),
+Q("For 2Al + 3Cl₂ → 2AlCl₃, with 4.0 mol Al and 3.0 mol Cl₂, how much AlCl₃ forms?",["2.0 mol","3.0 mol","4.0 mol","6.0 mol"],0,["Cl₂ is limiting: 3.0 × (2/3) = 2.0.","That ignores the ratio.","That assumes Al is limiting.","That's too many."]),
+Q("In the same reaction (4.0 mol Al, 3.0 mol Cl₂), how much Al is left over?",["0 mol","1.0 mol","2.0 mol","4.0 mol"],2,["Al is in excess.","Al used is 2.0 mol, not 3.0.","4.0 − 2.0 = 2.0 mol left.","None would be used then."]),
+Q("An actual yield of 45 g with a theoretical yield of 60 g gives a percent yield of:",["25%","75%","133%","45%"],1,["That's the percent lost.","45 ÷ 60 × 100 = 75%.","That inverts the ratio.","That's the mass in grams."]),
+Q("Which reaction produces a gas?",["NaOH + HCl","Na₂CO₃ + 2HCl","KNO₃ + NaCl","AgNO₃ + NaCl"],1,["Forms water only.","Carbonate plus acid releases CO₂.","No reaction occurs.","Forms a solid."]),
+Q("Complete combustion of a hydrocarbon produces:",["CO₂ and H₂O","CO and H₂","C and H₂O","CH₄ and O₂"],0,["Complete burning gives these two.","That's incomplete combustion.","Not typical.","Those are reactants or fuel."]),
+Q("Which anion forms an insoluble salt with Ag⁺?",["NO₃⁻","Cl⁻","C₂H₃O₂⁻","ClO₄⁻"],1,["Always soluble.","AgCl is insoluble.","Generally soluble.","Soluble."]),
+Q("Mixing Na₂SO₄(aq) and BaCl₂(aq) forms what precipitate?",["NaCl","BaSO₄","Na₂Ba","BaCl₂"],1,["Soluble.","Barium sulfate is insoluble.","Not a compound formed.","That's a reactant."]),
+Q("In 2H₂ + O₂ → 2H₂O, how many mol of H₂O form from 3.0 mol O₂ with excess H₂?",["1.5","3.0","6.0","9.0"],2,["Too low.","That ignores the ratio.","1 O₂ gives 2 H₂O, so 6.0.","Too high."]),
+Q("If 10 g of A reacts completely with 5 g of B, the mass of products is:",["5 g","10 g","15 g","50 g"],2,["Mass is conserved.","That ignores B.","Total mass of products equals total mass of reactants.","That multiplies."]),
+Q("A total ionic equation shows:",["All dissolved ions separately","Only spectator ions","Only the precipitate","Only solids"],0,["Strong electrolytes are split into ions.","Spectators appear but aren't alone.","The precipitate is written whole.","It includes aqueous ions."]),
+Q("In a Brønsted–Lowry acid-base reaction, the acid is the:",["Proton donor","Proton acceptor","Electron donor","Electron acceptor"],0,["Acids give away H⁺.","That's the base.","That's a Lewis base.","That's a Lewis acid."]),
+Q("In HF + H₂O ⇌ F⁻ + H₃O⁺, the conjugate base is:",["HF","H₂O","F⁻","H₃O⁺"],2,["That's the acid.","That's the base.","F⁻ is HF after losing H⁺.","That's the conjugate acid."]),
+Q("What mass of CaO forms from decomposing 10.0 g CaCO₃ (100 g/mol; CaO 56 g/mol)?",["5.6 g","10.0 g","4.4 g","56 g"],0,["0.100 mol × 56 g/mol = 5.6 g.","Mass isn't conserved per product.","That's the CO₂ mass.","That's 1 mol."]),
+Q("What mass of CO₂ forms in that same reaction (CO₂ = 44 g/mol)?",["4.4 g","5.6 g","10 g","44 g"],0,["0.100 mol × 44 g/mol = 4.4 g.","That's the CaO mass.","That's the reactant mass.","That's 1 mol."]),
+Q("In 4Fe + 3O₂ → 2Fe₂O₃, how many mol of Fe₂O₃ form from 2.0 mol Fe?",["0.5","1.0","2.0","4.0"],1,["That's too low.","4 : 2 ratio, so half.","That ignores the ratio.","That doubles instead of halves."]),
+Q("What mass of O₂ is needed to burn 1.0 mol C₃H₈ (O₂ = 32 g/mol)?",["32 g","96 g","160 g","224 g"],2,["That's only 1 mol O₂.","That's 3 mol O₂.","5 mol × 32 g/mol = 160 g.","That's 7 mol O₂."]),
+Q("With 10.0 g H₂ and 10.0 g O₂ in 2H₂ + O₂ → 2H₂O, the limiting reactant is:",["H₂","O₂","Neither","H₂O"],1,["About 5 mol H₂ is available, which is plenty.","0.31 mol O₂ needs only 0.63 mol H₂.","The amounts differ.","It's a product."]),
+Q("The theoretical yield is 25.0 g and the percent yield is 84%. What is the actual yield?",["21 g","25 g","30 g","2.1 g"],0,["0.84 × 25.0 = 21 g.","That's the theoretical yield.","That exceeds the theoretical yield.","Decimal slip."]),
+Q("How many grams of AgCl (143.3 g/mol) form from 0.010 mol AgNO₃ and excess NaCl?",["0.143 g","1.43 g","14.3 g","143 g"],1,["Decimal slip.","0.010 × 143.3 = 1.43 g.","Decimal slip.","That's 1 mol."]),
+Q("What volume of 0.10 M NaOH neutralizes 0.0050 mol HCl?",["5.0 mL","50 mL","500 mL","0.50 mL"],1,["Too small.","0.0050 mol ÷ 0.10 M = 0.050 L.","Too large.","Too small."]),
+Q("How many mol of NaOH neutralize 0.020 mol H₂SO₄?",["0.010","0.020","0.040","0.080"],2,["That's half.","H₂SO₄ has two acidic H.","2 × 0.020 = 0.040.","That's too many."]),
+Q("25.0 mL of H₂SO₄ needs 50.0 mL of 0.100 M NaOH. What is [H₂SO₄]?",["0.050 M","0.100 M","0.200 M","0.400 M"],1,["That forgets the 2 : 1 ratio.","0.00500 mol NaOH gives 0.00250 mol acid ÷ 0.0250 L = 0.100 M.","That ignores the ratio.","Too high."]),
+Q("What is the oxidation number of Cl in ClO₃⁻?",["+1","+3","+5","+7"],2,["That's ClO⁻.","That's ClO₂⁻.","Cl + 3(−2) = −1, so Cl = +5.","That's ClO₄⁻."]),
+Q("What is the oxidation number of C in CO₂?",["+2","+4","−4","0"],1,["That's CO.","C + 2(−2) = 0.","That's CH₄.","That's elemental carbon."]),
+Q("What is the oxidation number of Fe in Fe₂O₃?",["+2","+3","+6","−3"],1,["That's FeO.","2Fe + 3(−2) = 0, so Fe = +3.","That's the total, not per atom.","Metals are positive."]),
+Q("What is the oxidation number of Mn in MnO₂?",["+2","+4","+6","+7"],1,["Too low.","Mn + 2(−2) = 0.","That's manganate.","That's permanganate."]),
+Q("What is the oxidation number of H in NaH?",["+1","0","−1","−2"],2,["That's H bonded to nonmetals.","That's H₂.","H is more electronegative than Na.","Not possible for H."]),
+Q("What is the oxidation number of N in NO₃⁻?",["+3","+5","−3","+4"],1,["That's nitrite.","N + 3(−2) = −1.","That's ammonia.","That's NO₂."]),
+Q("In 2Al + 3Cu²⁺ → 2Al³⁺ + 3Cu, which species is oxidized?",["Al","Cu²⁺","Al³⁺","Cu"],0,["Al goes 0 to +3.","Cu²⁺ is reduced.","That's a product.","That's a product."]),
+Q("How many electrons does each Mg atom lose to form Mg²⁺?",["1","2","3","4"],1,["That's Na.","Group 2 loses two.","That's Al.","That's too many."]),
+Q("Which is a double replacement reaction?",["Zn + CuSO₄ → ZnSO₄ + Cu","BaCl₂ + K₂SO₄ → BaSO₄ + 2KCl","2KClO₃ → 2KCl + 3O₂","N₂ + 3H₂ → 2NH₃"],1,["Single replacement.","Cations and anions swap.","Decomposition.","Synthesis."]),
+Q("Which is a decomposition reaction?",["2KClO₃ → 2KCl + 3O₂","Zn + 2HCl → ZnCl₂ + H₂","N₂ + 3H₂ → 2NH₃","NaOH + HCl → NaCl + H₂O"],0,["One reactant splits into products.","Single replacement.","Synthesis.","Neutralization."]),
+Q("Will Cl₂ react with KBr(aq)?",["Yes, Cl₂ is more reactive than Br₂","No, Br₂ is more reactive","No, K is too reactive","Only when heated"],0,["Cl₂ oxidizes Br⁻.","Reactivity goes the other way.","K is a spectator.","It occurs readily."]),
+Q("Will Zn react with MgCl₂(aq)?",["Yes","No, Zn is less reactive than Mg","Yes, Cl⁻ is oxidized","Only with a catalyst"],1,["Zn cannot replace Mg.","Zn can't reduce Mg²⁺.","Cl⁻ isn't oxidized here.","A catalyst can't change the activity series."]),
+Q("What is the net ionic equation for Pb(NO₃)₂ + 2KI → PbI₂ + 2KNO₃?",["Pb²⁺ + 2I⁻ → PbI₂(s)","K⁺ + NO₃⁻ → KNO₃","Pb(NO₃)₂ → Pb²⁺ + 2NO₃⁻","2KI → 2K⁺ + 2I⁻"],0,["Only the solid-forming ions appear.","KNO₃ stays dissolved.","That's dissociation only.","That's dissociation only."]),
+Q("What is the net ionic equation for Na₂CO₃ + 2HCl → 2NaCl + H₂O + CO₂?",["CO₃²⁻ + 2H⁺ → H₂O + CO₂","Na⁺ + Cl⁻ → NaCl","H⁺ + OH⁻ → H₂O","CO₃²⁻ → CO₂"],0,["Spectators are removed.","NaCl stays dissolved.","There's no OH⁻ here.","It must include H⁺."]),
+Q("What is the net ionic equation for HF + NaOH → NaF + H₂O?",["H⁺ + OH⁻ → H₂O","HF + OH⁻ → F⁻ + H₂O","F⁻ + Na⁺ → NaF","HF → H⁺ + F⁻"],1,["HF is a weak acid, so it stays as HF.","HF remains molecular and Na⁺ is a spectator.","NaF stays dissolved.","That's partial dissociation only."]),
+Q("What are the spectator ions in NaOH + HCl → NaCl + H₂O?",["Na⁺ and Cl⁻","H⁺ and OH⁻","Na⁺ and OH⁻","Cl⁻ and H⁺"],0,["They don't change.","They form water.","OH⁻ reacts.","H⁺ reacts."]),
+Q("Which is a strong acid?",["H₃PO₄","HBr","HF","CH₃COOH"],1,["Weak.","One of the strong halogen acids.","Weak.","Weak."]),
+Q("Which is a weak base?",["NaOH","KOH","NH₃","Ba(OH)₂"],2,["Strong.","Strong.","Only partly ionizes in water.","Strong."]),
+Q("Which pair of solutions forms a precipitate?",["NaNO₃ + KCl","Pb(NO₃)₂ + Na₂SO₄","KOH + HNO₃","NH₄Cl + NaNO₃"],1,["All products soluble.","PbSO₄ is insoluble.","Neutralization, no solid.","All products soluble."]),
+Q("How many mol of H⁺ are in 25.0 mL of 0.200 M HNO₃?",["0.00500","0.0500","0.500","0.200"],0,["0.0250 L × 0.200 M = 0.00500.","Decimal slip.","Decimal slip.","That's the molarity."]),
+Q("What mass of NaOH (40.0 g/mol) neutralizes 0.020 mol HCl?",["0.80 g","8.0 g","0.40 g","40 g"],0,["0.020 × 40.0 = 0.80 g.","Decimal slip.","Wrong arithmetic.","That's 1 mol."]),
+Q("An acid reacting with a metal hydroxide gives:",["A salt and water","A gas and water","A precipitate only","Two acids"],0,["That's neutralization.","That's acid plus carbonate.","Not always.","Not applicable."]),
+Q("An acid reacting with a carbonate gives:",["Salt, water and CO₂","Only a salt","Hydrogen gas","A metal"],0,["It also releases gas.","CO₂ bubbles off.","That's acid plus a metal.","Not applicable."]),
+Q("In 2H₂ + O₂ → 2H₂O, which is oxidized?",["H₂","O₂","H₂O","Neither"],0,["H goes 0 to +1.","O goes 0 to −2 (reduced).","It's the product.","Both change."]),
+Q("Which is evidence of a chemical reaction?",["A change of state","Formation of a precipitate","Dissolving sugar","Crushing a solid"],1,["Physical change.","A new solid forms.","Physical change.","Physical change."]),
+Q("What is the sum of the coefficients in 2H₂ + O₂ → 2H₂O?",["3","4","5","6"],2,["That omits one.","That omits one.","2 + 1 + 2 = 5.","That adds too many."]),
+Q("What is the coefficient of Fe when Fe + O₂ → Fe₂O₃ is balanced?",["2","3","4","6"],2,["That doesn't balance the oxygen.","That doesn't balance.","4Fe + 3O₂ → 2Fe₂O₃.","That doesn't balance."]),
+Q("MnO₄⁻ → Mn²⁺ is:",["Oxidation","Reduction","Neither","Both"],1,["Oxidation number goes down from +7 to +2.","Mn is reduced.","Oxidation number changes.","Only one process."]),
+Q("SO₃²⁻ → SO₄²⁻ is:",["Oxidation","Reduction","Neither","Both"],0,["S goes from +4 to +6.","Oxidation number increases.","S changes.","Only one process."])
+]},
+{name:"Unit 5: Kinetics",qs:[
+Q("If rate = k[A]², doubling [A] makes the rate:",["Double","Quadruple","Stay the same","Triple"],1,["That would be first order.","2² = 4, so the rate quadruples.","Rate changes with concentration here.","That would need a different exponent."]),
+Q("What does a catalyst do?",["Raises the activation energy","Lowers the activation energy","Changes ΔH of the reaction","Changes the equilibrium constant"],1,["That would slow the reaction.","It gives an alternate pathway with lower Eₐ.","ΔH is set by reactants and products.","K is unchanged by a catalyst."]),
+Q("What are the units of k for a first-order reaction?",["M·s⁻¹","s⁻¹","M⁻¹s⁻¹","M"],1,["That's the units of rate.","Rate (M/s) divided by [A] (M) gives s⁻¹.","That's second order.","That's concentration."]),
+Q("The half-life of a first-order reaction:",["Doubles each half-life","Depends on initial concentration","Is constant","Shrinks each half-life"],2,["It doesn't grow.","That's true for second order, not first.","t½ = 0.693/k, independent of concentration.","It stays the same."]),
+Q("Raising temperature speeds a reaction mainly because:",["Collisions get less frequent","More collisions have energy ≥ Eₐ","Eₐ decreases","ΔH becomes more negative"],1,["Collisions become more frequent.","A larger fraction of molecules exceeds Eₐ.","Only a catalyst lowers Eₐ.","ΔH is unaffected by rate."]),
+Q("A rate law must be determined from:",["Experiments","The balanced equation","Molar masses","ΔH"],0,["Rate laws come from data.","Coefficients don't set the orders.","Not related.","Not related."]),
+Q("What is the overall order of rate = k[A][B]²?",["1","2","3","4"],2,["That's one exponent.","That adds only A and B.","1 + 2 = 3.","Too high."]),
+Q("What are the units of k for a second-order reaction?",["s⁻¹","M⁻¹s⁻¹","M·s⁻¹","M"],1,["First order.","Rate ÷ M² gives M⁻¹s⁻¹.","Units of rate.","Concentration."]),
+Q("The rate-determining step is the:",["Fastest step","Slowest step","First step always","Last step always"],1,["The slow step limits the rate.","It's the bottleneck.","Not always first.","Not always last."]),
+Q("For a first-order reaction, which plot is linear?",["[A] vs t","ln[A] vs t","1/[A] vs t","[A]² vs t"],1,["That's zero order.","Slope is −k.","That's second order.","Not used."]),
+Q("An intermediate is a species that is:",["Produced then consumed in the mechanism","Present at the start and end","A catalyst","Always a product"],0,["It doesn't appear in the overall equation.","That's a catalyst.","A catalyst is unchanged.","It's consumed."]),
+Q("An effective collision requires:",["Enough energy and proper orientation","Only high temperature","Only proper orientation","A catalyst"],0,["Both factors matter.","Orientation matters too.","Energy matters too.","Not required."]),
+Q("A first-order reaction has t½ = 20 min. What fraction remains after 60 min?",["1/2","1/4","1/8","1/16"],2,["That's one half-life.","That's two.","Three half-lives gives (1/2)³.","That's four."]),
+Q("Activation energy on a reaction diagram is the energy difference between:",["Reactants and transition state","Reactants and products","Products and transition state","Reactants and catalyst"],0,["That's the barrier height.","That's ΔH.","That's the reverse barrier.","Not used."]),
+Q("Doubling [A] doubles the rate. The reaction is ___ order in A.",["Zero","First","Second","Third"],1,["Rate wouldn't change.","Rate scales directly with [A].","Rate would quadruple.","Rate would increase eightfold."]),
+Q("Tripling [B] makes the rate 9 times larger. The order in B is:",["0","1","2","3"],2,["No change in rate.","It would triple.","3² = 9.","It would be 27 times."]),
+Q("Doubling [A] has no effect on the rate. The order in A is:",["0","1","2","−1"],0,["Rate is independent of [A].","Rate would double.","Rate would quadruple.","Rate would halve."]),
+Q("Doubling [A] quadruples the rate and doubling [B] changes nothing. The rate law is:",["k[A]","k[A]²","k[A][B]","k[B]²"],1,["That would only double the rate.","Second order in A, zero in B.","That would require B to matter.","B doesn't matter."]),
+Q("For rate = k[A][B], doubling both [A] and [B] makes the rate:",["Double","Quadruple","Stay the same","Triple"],1,["That's only one doubling.","2 × 2 = 4.","Concentrations matter.","Not a factor of 3."]),
+Q("For rate = k[A], tripling [A] makes the rate:",["Stay the same","Triple","Increase 9 times","Double"],1,["Rate depends on [A].","First order scales directly.","That's second order.","Not a factor of 2."]),
+Q("What are the units of k for a zero-order reaction?",["s⁻¹","M⁻¹s⁻¹","M·s⁻¹","M⁻²s⁻¹"],2,["That's first order.","That's second order.","Rate = k, so k has the units of rate.","That's third order."]),
+Q("What are the units of reaction rate?",["M","M/s","s","M²"],1,["That's concentration.","Change in concentration per time.","That's time.","Not rate."]),
+Q("For 2A → B, the rate of disappearance of A is ___ the rate of appearance of B.",["Half","Equal to","Twice","Four times"],2,["A disappears faster.","The coefficients differ.","2 mol A are lost per 1 mol B formed.","Too large."]),
+Q("[A] drops from 1.0 M to 0.60 M in 20 s. What is the average rate?",["0.020 M/s","0.40 M/s","0.030 M/s","0.050 M/s"],0,["0.40 ÷ 20 = 0.020 M/s.","That's the change, not the rate.","Wrong arithmetic.","Wrong arithmetic."]),
+Q("If k = 0.0693 s⁻¹ for a first-order reaction, the half-life is:",["1.0 s","10 s","100 s","0.693 s"],1,["Too short.","0.693 ÷ 0.0693 = 10 s.","Too long.","That ignores k."]),
+Q("After two half-lives of a first-order reaction, what fraction remains?",["1/2","1/4","1/8","0"],1,["That's one half-life.","(1/2)² = 1/4.","That's three half-lives.","It never reaches zero."]),
+Q("For a second-order reaction, which plot is linear?",["[A] vs t","ln[A] vs t","1/[A] vs t","[A]² vs t"],2,["That's zero order.","That's first order.","Slope = k.","Not used."]),
+Q("For a zero-order reaction, which plot is linear?",["[A] vs t","ln[A] vs t","1/[A] vs t","Rate vs [A]²"],0,["Slope = −k.","That's first order.","That's second order.","Not used."]),
+Q("For a second-order reaction, successive half-lives:",["Get shorter","Get longer","Stay constant","Equal zero"],1,["Concentration falls, so collisions slow.","Lower [A] means longer t½.","That's first order.","Not possible."]),
+Q("An elementary step A + B → C has the rate law:",["k[A]","k[B]","k[A][B]","k[C]"],2,["It must include both reactants.","It must include both reactants.","Elementary steps use their coefficients.","C is a product."]),
+Q("The steps of a mechanism must:",["Add up to the overall equation","Each be zero order","Contain only catalysts","Be exothermic"],0,["Intermediates cancel.","No such requirement.","Not required.","Not required."]),
+Q("A mechanism's slow step is A + B → C. The overall rate law is:",["k[A]","k[A][B]","k[C]","k[A]²"],1,["B is involved too.","The slow step sets the rate law.","C is formed, not a reactant.","Not matching the step."]),
+Q("In a mechanism, a catalyst is:",["Consumed and regenerated","Only produced","Only consumed","Never involved"],0,["It appears early and returns.","That describes an intermediate.","That describes a reactant.","It participates."]),
+Q("The final rate law normally does not contain:",["Reactants","Intermediates","Catalysts","Concentrations"],1,["Reactants can appear.","Intermediates are replaced using earlier steps.","Catalysts can appear.","Rate laws use them."]),
+Q("A unimolecular elementary step is:",["First order","Second order","Zero order","Third order"],0,["One reactant particle, so rate ∝ [A].","That's bimolecular.","Not zero order.","Rare."]),
+Q("A bimolecular elementary step is:",["First order","Second order","Zero order","Third order"],1,["That's unimolecular.","Two particles collide.","Not zero order.","Rare."]),
+Q("A higher activation energy means, at a given temperature, the reaction is:",["Faster","Slower","Unchanged","Exothermic"],1,["Fewer molecules have enough energy.","A larger barrier slows it.","Eₐ matters.","Not related to ΔH."]),
+Q("On an Arrhenius plot of ln k vs 1/T, the slope equals:",["−Eₐ/R","Eₐ/R","k","−R/Eₐ"],0,["The line slopes downward.","The sign is negative.","Not the slope.","Inverted."]),
+Q("A catalyst changes ΔH of the reaction by:",["Raising it","Lowering it","Not at all","Making it zero"],2,["ΔH depends on reactants and products.","ΔH depends on reactants and products.","It only changes the pathway.","Not zero."]),
+Q("A catalyst speeds up:",["Only the forward reaction","Only the reverse reaction","Both forward and reverse","Neither"],2,["It lowers the barrier both ways.","It lowers the barrier both ways.","Equilibrium is reached faster.","It speeds the reaction."]),
+Q("Increasing the surface area of a solid reactant:",["Increases the rate","Decreases the rate","Doesn't matter","Changes ΔH"],0,["More exposed particles collide.","Opposite.","It matters.","ΔH doesn't change."]),
+Q("Raising the concentration of reactants usually:",["Increases collision frequency","Lowers Eₐ","Changes ΔH","Lowers temperature"],0,["More particles per volume.","Only catalysts do that.","ΔH is fixed.","Not related."]),
+Q("A heterogeneous catalyst is:",["In a different phase from the reactants","In the same phase as the reactants","Always a gas","Consumed completely"],0,["Like a solid metal surface with gases.","That's homogeneous.","Not necessarily.","Catalysts are regenerated."]),
+Q("A homogeneous catalyst is:",["In the same phase as the reactants","In a different phase","A solid only","A product"],0,["Mixed in with the reactants.","That's heterogeneous.","Not necessarily.","It isn't a product."]),
+Q("Enzymes are:",["Biological catalysts","Reactants","Inhibitors only","Intermediates"],0,["They speed up reactions in living things.","They aren't consumed.","They speed reactions.","They're not intermediates."]),
+Q("A reaction energy diagram with two peaks represents:",["One step","Two steps","No steps","Three steps"],1,["One peak is one step.","Each peak is a transition state.","It has steps.","That would show three peaks."]),
+Q("On an energy diagram, an intermediate appears as:",["A valley between peaks","A peak","The reactants","The products"],0,["It's a local energy minimum.","Peaks are transition states.","Reactants start the diagram.","Products end it."]),
+Q("The transition state is:",["An energy maximum along the path","An energy minimum","The product","A catalyst"],0,["The top of the barrier.","That's an intermediate.","Not a stable species.","Not a catalyst."]),
+Q("For an exothermic reaction, the products are:",["Higher in energy than reactants","Lower in energy than reactants","Equal in energy","Unstable"],1,["That's endothermic.","Energy is released.","ΔH ≠ 0.","Not necessarily."]),
+Q("A first-order reaction has t½ = 30 min. What percent remains after 90 min?",["50%","25%","12.5%","6.25%"],2,["That's one half-life.","That's two.","Three half-lives gives (1/2)³ = 12.5%.","That's four."]),
+Q("For a first-order reaction with t½ = 15 min, how long until 75% has reacted?",["15 min","30 min","45 min","60 min"],1,["That's 50% reacted.","Two half-lives leaves 25%.","That's 87.5% reacted.","That's 93.75% reacted."]),
+Q("A first-order reaction has k = 0.050 min⁻¹. What is t½?",["6.9 min","13.9 min","27.7 min","0.035 min"],1,["That uses 0.346 ÷ 0.050.","0.693 ÷ 0.050 = 13.9 min.","That doubles it.","That multiplies instead of divides."]),
+Q("Which change does NOT affect the rate constant k?",["Temperature","Catalyst","Reactant concentration","Activation energy"],2,["k depends on T.","A catalyst changes k.","Concentration changes rate, not k.","Eₐ changes k."]),
+Q("As reactants are consumed, the instantaneous rate usually:",["Increases","Decreases","Stays the same","Doubles"],1,["Fewer collisions happen.","Lower concentrations give lower rates.","Rates change with concentration.","No such effect."]),
+Q("For rate = k[A]² with k = 2.0 M⁻¹s⁻¹ and [A] = 0.10 M, the rate is:",["0.020 M/s","0.20 M/s","0.040 M/s","2.0 M/s"],0,["2.0 × 0.010 = 0.020.","Forgot to square.","Wrong arithmetic.","Ignores [A]."]),
+Q("For rate = k[A] with k = 0.10 s⁻¹ and [A] = 0.50 M, the rate is:",["0.050 M/s","0.10 M/s","0.50 M/s","0.20 M/s"],0,["0.10 × 0.50.","Just k.","Just [A].","Wrong arithmetic."]),
+Q("Why does a small temperature rise greatly increase rate?",["More molecules exceed Eₐ","Eₐ drops","ΔH changes","Concentration rises"],0,["The high-energy tail grows.","Only catalysts lower Eₐ.","ΔH is fixed.","Concentration is unchanged."]),
+Q("Only a fraction of collisions react because most lack:",["Enough energy or proper orientation","A catalyst","A solvent","Mass"],0,["Both are required.","Not required.","Not required.","Not relevant."]),
+Q("Termolecular elementary steps are rare because:",["Three-particle collisions are unlikely","They are too fast","They are endothermic","They need catalysts"],0,["Simultaneous collisions seldom occur.","They're slow.","Unrelated.","Unrelated."])
+]},
+{name:"Unit 6: Thermodynamics",qs:[
+Q("How much heat warms 50.0 g of water (c = 4.18 J/g·°C) by 10.0 °C?",["209 J","2090 J","20.9 J","5.0 J"],1,["That's missing a factor of 10.","q = mcΔT = 50.0 × 4.18 × 10.0 = 2090 J.","That's off by a factor of 100.","That's just m × ΔT/100, with no c."]),
+Q("An endothermic reaction has:",["ΔH < 0","ΔH > 0","ΔH = 0","ΔS < 0 always"],1,["That's exothermic.","Endothermic means the system absorbs heat.","Then no heat is exchanged.","Entropy is unrelated to this definition."]),
+Q("Breaking a chemical bond is:",["Exothermic","Endothermic","Neither","Always spontaneous"],1,["Forming bonds releases energy.","Energy must be added to break bonds.","It always requires energy input.","Spontaneity depends on ΔG."]),
+Q("Two samples absorb equal heat. The one with the larger specific heat will have:",["A larger temperature rise","A smaller temperature rise","The same rise","No change"],1,["Larger c means more energy is needed per degree.","ΔT = q/mc, so larger c gives a smaller ΔT.","Only if c is equal.","Both absorb energy, so both change."]),
+Q("An exothermic reaction has:",["ΔH > 0","ΔH < 0","ΔH = 0","No energy change"],1,["That's endothermic.","Heat is released.","Heat is exchanged.","Energy is released."]),
+Q("In an exothermic reaction, heat flows:",["From surroundings to system","From system to surroundings","Nowhere","Into the products only"],1,["That's endothermic.","The surroundings warm up.","Heat transfers.","Heat leaves the system."]),
+Q("In calorimetry, q_reaction equals:",["+q_solution","−q_solution","0","2 × q_solution"],1,["Opposite signs.","Energy lost by the reaction is gained by the solution.","Energy is exchanged.","No factor of 2."]),
+Q("ΔH°rxn equals:",["Σ products − Σ reactants (ΔH°f)","Σ reactants − Σ products","Only the products","Bond energies of products"],0,["Products minus reactants.","That flips the sign.","Reactants matter too.","Not this method."]),
+Q("What is ΔH°f of an element in its standard state?",["0","1","−1","Depends on the element"],0,["By definition.","Not defined that way.","Not defined that way.","Always zero."]),
+Q("How much heat warms 20.0 g of metal (c = 0.50 J/g·°C) by 10.0 °C?",["10 J","100 J","1000 J","250 J"],1,["Missing the mass.","20.0 × 0.50 × 10.0 = 100 J.","Off by 10.","Wrong arithmetic."]),
+Q("Using bond enthalpies, ΔH equals:",["Bonds broken − bonds formed","Bonds formed − bonds broken","Bonds broken + bonds formed","Zero"],0,["Breaking costs energy.","That flips the sign.","They have opposite signs.","Not zero."]),
+Q("The heat of fusion is the heat needed to:",["Melt a solid at constant T","Boil a liquid","Raise T by 1 °C","Sublime a solid"],0,["Fusion means melting.","That's vaporization.","That's heat capacity.","That's sublimation."]),
+Q("Equal masses of water at 80 °C and 20 °C are mixed. The final temperature is:",["20 °C","50 °C","80 °C","100 °C"],1,["That's the cold start.","The average for equal masses.","That's the hot start.","Too high."]),
+Q("What are the units of specific heat?",["J/g·°C","J/mol","J·g","g/J"],0,["Energy per mass per degree.","That's energy per mole.","Wrong form.","Inverted."]),
+Q("100 g of water at 20 °C absorbs 8360 J (c = 4.18 J/g·°C). Its final temperature is:",["22 °C","40 °C","60 °C","28 °C"],1,["Too small.","ΔT = 8360 ÷ (100 × 4.18) = 20 °C.","Too large.","Wrong arithmetic."]),
+Q("50.0 g of water warms by 5.0 °C in a calorimeter. How much heat did it absorb (c = 4.18)?",["209 J","1050 J","250 J","10.5 kJ"],1,["That's missing a factor of 5.","50.0 × 4.18 × 5.0 = 1045 J.","That's m × ΔT only.","Off by a factor of 10."]),
+Q("Dissolving NH₄NO₃ in water makes the solution cold. The process is:",["Exothermic","Endothermic","Neither","A combustion"],1,["Heat would be released.","It absorbs heat from the water.","Heat is exchanged.","Not combustion."]),
+Q("A reaction has ΔH = −50 kJ/mol. How much heat is released by 2.0 mol?",["25 kJ","50 kJ","100 kJ","200 kJ"],2,["That halves it.","That's for 1 mol.","2.0 × 50 = 100 kJ.","Too large."]),
+Q("If a balanced equation is multiplied by 2, ΔH:",["Halves","Doubles","Stays the same","Changes sign"],1,["Opposite.","ΔH scales with the amount.","It scales.","Only reversal changes sign."]),
+Q("A → B has ΔH = +10 kJ and B → C has ΔH = −30 kJ. What is ΔH for A → C?",["−40 kJ","−20 kJ","+20 kJ","+40 kJ"],1,["That adds magnitudes.","10 + (−30) = −20.","Wrong sign.","Wrong sign."]),
+Q("N₂ + O₂ → 2NO (+180 kJ) and 2NO + O₂ → 2NO₂ (−114 kJ). What is ΔH for N₂ + 2O₂ → 2NO₂?",["+66 kJ","−66 kJ","+294 kJ","−294 kJ"],0,["180 + (−114) = +66.","Wrong sign.","That subtracts incorrectly.","Wrong sign."]),
+Q("For CH₄ + 2O₂ → CO₂ + 2H₂O(l), ΔH°f(CH₄) = −75, CO₂ = −394, H₂O(l) = −286 kJ/mol. What is ΔH°rxn?",["−891 kJ","−605 kJ","+891 kJ","−1041 kJ"],0,["−394 + 2(−286) − (−75) = −891.","That forgets the 2 on water.","Wrong sign.","That adds instead of subtracting CH₄."]),
+Q("Enthalpy is a state function, which means it depends only on:",["The initial and final states","The path taken","The time taken","The catalyst"],0,["Path doesn't matter.","Path-independent.","Not time.","Not relevant."]),
+Q("Which is not a state function?",["Enthalpy","Heat (q)","Temperature","Pressure"],1,["State function.","Depends on the path.","State function.","State function."]),
+Q("Standard enthalpy of formation refers to making one mole of a compound from:",["Its elements in standard states","Any reactants","Ions","Gases only"],0,["That's the definition.","It must be elements.","Not ions.","Not necessarily gases."]),
+Q("Breaking 1 mol of H–H bonds (436 kJ/mol) is:",["+436 kJ","−436 kJ","0 kJ","−872 kJ"],0,["Breaking bonds absorbs energy.","Forming would release it.","It requires energy.","That's double."]),
+Q("H₂ + Cl₂ → 2HCl. Bond energies: H–H 436, Cl–Cl 243, H–Cl 431 kJ/mol. What is ΔH?",["−183 kJ","+183 kJ","−1541 kJ","+679 kJ"],0,["679 − 862 = −183.","Wrong sign.","That adds everything.","That's only the bonds broken."]),
+Q("If stronger bonds form than break, the reaction is:",["Exothermic","Endothermic","Neutral","Impossible"],0,["More energy is released than absorbed.","The opposite.","Net energy changes.","Possible."]),
+Q("For the same substance, the heat of vaporization is usually ___ the heat of fusion.",["Larger than","Smaller than","Equal to","Zero"],0,["Vaporization separates molecules completely.","Fusion only loosens them.","They differ.","Not zero."]),
+Q("How much heat melts 36.0 g of ice (ΔH_fus = 334 J/g)?",["334 J","12.0 kJ","1.2 kJ","120 kJ"],1,["That's per gram.","36.0 × 334 ≈ 12,000 J.","Off by 10.","Off by 10."]),
+Q("During freezing, the temperature of a pure substance:",["Rises","Falls","Stays constant","Doubles"],2,["Heat is being released at constant T.","T is constant.","It plateaus.","No such effect."]),
+Q("How much heat is released when 50.0 g of water cools from 80 °C to 30 °C?",["1.05 kJ","10.5 kJ","20.9 kJ","5.2 kJ"],1,["Off by 10.","50.0 × 4.18 × 50 = 10,450 J.","That doubles it.","That halves it."]),
+Q("100 g of water at 80 °C mixes with 50 g of water at 20 °C. The final temperature is:",["50 °C","60 °C","40 °C","70 °C"],1,["That's the simple average.","(100×80 + 50×20) ÷ 150 = 60 °C.","Too low.","Too high."]),
+Q("When a hot metal is dropped into cool water, the heat lost by the metal:",["Equals the heat gained by the water","Is greater than the gain","Is less than the gain","Disappears"],0,["Energy is conserved.","Energy isn't created.","Energy isn't destroyed.","Energy is conserved."]),
+Q("A coffee-cup calorimeter measures heat at constant:",["Pressure","Volume","Temperature","Mass"],0,["Open to the atmosphere.","That's a bomb calorimeter.","T changes.","Not the defining feature."]),
+Q("A bomb calorimeter measures energy change at constant:",["Volume","Pressure","Time","pH"],0,["The container is sealed.","That's a coffee cup.","Not relevant.","Not relevant."]),
+Q("An exothermic reaction in a calorimeter makes the solution:",["Warmer","Colder","The same","Frozen"],0,["Heat released warms it.","That's endothermic.","Temperature changes.","Not necessarily."]),
+Q("An endothermic reaction in a calorimeter makes the solution:",["Colder","Warmer","The same","Boiling"],0,["It absorbs heat from the solution.","That's exothermic.","Temperature changes.","Not necessarily."]),
+Q("Combustion reactions generally have ΔH:",["Negative","Positive","Zero","Undefined"],0,["They release heat.","That would absorb heat.","They exchange heat.","It's defined."]),
+Q("If products are higher in energy than reactants on a diagram, ΔH is:",["Positive","Negative","Zero","Equal to Eₐ"],0,["Energy is absorbed.","That's exothermic.","Energy differs.","Not the same quantity."]),
+Q("The first law of thermodynamics states that the energy of the universe is:",["Conserved","Increasing","Decreasing","Zero"],0,["It can transform but not be created.","Not created.","Not destroyed.","Not zero."]),
+Q("Temperature measures:",["Average kinetic energy of particles","Total heat in a sample","Mass","Volume"],0,["It's an average property.","That depends on mass too.","Not related.","Not related."]),
+Q("Heat flows until the two objects reach:",["Thermal equilibrium","Zero energy","Equal mass","Equal volume"],0,["Temperatures equalize.","Energy isn't zero.","Mass is unrelated.","Volume is unrelated."]),
+Q("Which has the larger heat capacity?",["100 g of water","10 g of water","They are equal","Neither"],0,["More mass stores more heat per degree.","Less mass means less capacity.","Mass differs.","Both have one."]),
+Q("Why does water have a high specific heat?",["Hydrogen bonding","Low molar mass","Ionic bonds","It is a metal"],0,["Energy goes into disrupting H bonds.","Not the main reason.","Water is molecular.","Water isn't a metal."]),
+Q("The sign of ΔH for condensation is:",["Negative","Positive","Zero","Depends on pressure"],0,["Heat is released.","That's vaporization.","Heat is released.","Always negative."]),
+Q("The sign of ΔH for sublimation is:",["Positive","Negative","Zero","Variable"],0,["Heat is absorbed.","That's deposition.","Heat is absorbed.","Always positive."]),
+Q("The ΔH of freezing equals:",["−ΔH of fusion","+ΔH of fusion","Zero","ΔH of vaporization"],0,["Opposite process, opposite sign.","That's melting.","Heat is exchanged.","Different process."]),
+Q("Burning 0.50 mol of a fuel releases 400 kJ. What is ΔH per mole?",["−200 kJ/mol","−800 kJ/mol","+800 kJ/mol","−400 kJ/mol"],1,["That halves it.","400 ÷ 0.50 = 800 kJ per mole, released.","Wrong sign.","That ignores the amount."]),
+Q("A reaction has ΔH = −200 kJ/mol. How much heat is released by 3.0 mol?",["67 kJ","200 kJ","600 kJ","1800 kJ"],2,["That divides.","That's for 1 mol.","3.0 × 200 = 600 kJ.","Too large."]),
+Q("How much heat warms 25.0 g Al (c = 0.90 J/g·°C) by 20.0 °C?",["450 J","45 J","4500 J","22.5 J"],0,["25.0 × 0.90 × 20.0.","Off by 10.","Off by 10.","Missing ΔT."]),
+Q("Which has the smallest specific heat?",["Water (4.18)","Iron (0.45)","Ethanol (2.4)","Ice (2.1)"],1,["Largest of the group.","Heats up easiest.","High.","High."]),
+Q("How much heat vaporizes 10.0 g water (ΔH = 2260 J/g)?",["226 J","22.6 kJ","2.26 kJ","226 kJ"],1,["Off by 100.","10.0 × 2260 = 22,600 J.","Off by 10.","Off by 10."]),
+Q("Which process is endothermic?",["Condensation","Freezing","Melting","Deposition"],2,["Releases heat.","Releases heat.","Absorbs heat.","Releases heat."]),
+Q("Ignoring the heat a calorimeter absorbs makes the measured |ΔH|:",["Too small","Too large","Correct","Zero"],0,["Some heat is unaccounted for.","Opposite.","It's an error.","Not zero."]),
+Q("Enthalpy of combustion is normally reported per:",["Mole","Liter","Kelvin","Atom"],0,["Standard convention.","Not typical.","Wrong unit.","Not typical."]),
+Q("Which equation represents the formation of H₂O(l)?",["2H₂ + O₂ → 2H₂O","H₂ + ½O₂ → H₂O","H₂O → H₂ + ½O₂","H + O → H₂O"],1,["Makes 2 mol.","One mole from elements.","That's decomposition.","Not standard states."])
+]},
+{name:"Unit 7: Equilibrium",qs:[
+Q("What is K for N₂ + 3H₂ ⇌ 2NH₃?",["[NH₃]/([N₂][H₂])","[NH₃]²/([N₂][H₂]³)","[N₂][H₂]³/[NH₃]²","[NH₃]/([N₂][H₂]³)"],1,["Coefficients must become exponents.","Products over reactants, raised to their coefficients.","That's inverted (1/K).","The NH₃ exponent of 2 is missing."]),
+Q("If Q > K, the reaction shifts:",["Toward products","Toward reactants","Not at all","To the right"],1,["Too many products already.","Q > K means too much product, so it moves left.","Only at Q = K.","Right is the product side."]),
+Q("K ≫ 1 means:",["Reactants are favored","Products are favored","The reaction is fast","A catalyst is present"],1,["That's K ≪ 1.","Large K means more products at equilibrium.","K says nothing about speed.","K is independent of catalysts."]),
+Q("Adding NaCl to a saturated AgCl solution makes AgCl's solubility:",["Increase","Decrease","Unchanged","Double"],1,["Extra Cl⁻ doesn't dissolve more.","Common ion effect: extra Cl⁻ pushes AgCl to precipitate.","Ksp is fixed, but solubility changes.","No such doubling."]),
+Q("What is K for 2SO₂ + O₂ ⇌ 2SO₃?",["[SO₃]²/([SO₂]²[O₂])","[SO₃]/([SO₂][O₂])","[SO₂]²[O₂]/[SO₃]²","[SO₃]²/[SO₂][O₂]²"],0,["Products over reactants with coefficients.","Missing exponents.","That's inverted.","Wrong exponents."]),
+Q("What is K for CaCO₃(s) ⇌ CaO(s) + CO₂(g)?",["[CO₂]","[CaO][CO₂]/[CaCO₃]","1/[CO₂]","[CaO]"],0,["Solids are left out.","Solids are not included.","That's inverted.","Solids are left out."]),
+Q("Raising T on an exothermic reaction at equilibrium shifts it:",["Left, and K decreases","Right, and K increases","Left, and K increases","Right, and K decreases"],0,["Heat acts like a product, so it shifts away.","That's for endothermic.","K changes with T.","K changes with T."]),
+Q("Adding a catalyst to a system at equilibrium:",["Shifts it right","Shifts it left","Doesn't change K or position","Changes K"],2,["It speeds both directions equally.","It speeds both directions equally.","Equilibrium is reached faster.","K is unaffected."]),
+Q("What is Ksp for CaF₂?",["[Ca²⁺][F⁻]","[Ca²⁺][F⁻]²","[Ca²⁺]²[F⁻]","[CaF₂]"],1,["Missing the exponent.","Two F⁻ ions per formula unit.","Exponents swapped.","Solids are excluded."]),
+Q("If K = 4.0 for a reaction, K for the reverse reaction is:",["4.0","0.25","−4.0","16"],1,["That's for the forward reaction.","Reverse K = 1/K.","K is not negative.","That's K²."]),
+Q("K = 1 × 10⁻⁵ means:",["Reactants are favored","Products are favored","The reaction is fast","The reaction is complete"],0,["A small K means little product.","That's a large K.","K doesn't give speed.","It barely proceeds."]),
+Q("At equilibrium:",["Forward and reverse rates are equal","All concentrations are equal","The reaction stops","Q = 0"],0,["Rates match, so concentrations are constant.","Concentrations needn't be equal.","It continues at equal rates.","Q equals K."]),
+Q("What is K for H₂ + I₂ ⇌ 2HI?",["[HI]²/([H₂][I₂])","[HI]/([H₂][I₂])","[H₂][I₂]/[HI]²","[HI]²"],0,["Exponent from the coefficient.","Missing the exponent.","Inverted.","Reactants omitted."]),
+Q("An equilibrium constant expression includes:",["Gases and aqueous species","Pure solids","Pure liquids","Catalysts"],0,["Concentrations vary.","Constant, so omitted.","Constant, so omitted.","Not included."]),
+Q("Kₚ is written in terms of:",["Partial pressures","Molarities","Masses","Volumes"],0,["Used for gases.","That's K_c.","Not used.","Not used."]),
+Q("If Q = K, the system is:",["At equilibrium","Shifting right","Shifting left","Out of reactants"],0,["No net change.","That's Q < K.","That's Q > K.","Not implied."]),
+Q("Adding an inert gas at constant volume:",["Doesn't shift the equilibrium","Shifts right","Shifts left","Changes K"],0,["Partial pressures don't change.","No change in concentrations.","No change in concentrations.","K is fixed."]),
+Q("Raising T for an endothermic reaction at equilibrium shifts it:",["Right and K increases","Left and K decreases","Right and K decreases","Not at all"],0,["Heat acts like a reactant.","Opposite.","K increases with T here.","It shifts."]),
+Q("Pressure changes do not shift H₂ + I₂ ⇌ 2HI because:",["Gas moles are equal on both sides","It's exothermic","It has a catalyst","K is small"],0,["2 mol on each side.","Unrelated.","Unrelated.","Unrelated."]),
+Q("If K for A ⇌ B is 5, K for 2A ⇌ 2B is:",["10","25","5","2.5"],1,["That doubles K.","K is squared.","Unchanged would be wrong.","That halves it."]),
+Q("K₁ = 2 for A ⇌ B and K₂ = 3 for B ⇌ C. K for A ⇌ C is:",["5","6","1.5","0.67"],1,["That adds K values.","Multiply K values.","That divides.","That inverts."]),
+Q("In an ICE table for A → 2B, if A loses x, B gains:",["x","2x","x/2","x²"],1,["Ratio is 1 : 2.","Coefficients set the change.","Inverted.","Not related."]),
+Q("At equilibrium, A ⇌ B has [A] = 0.50 M and [B] = 0.25 M. K equals:",["0.50","2.0","0.125","4.0"],0,["[B]/[A] = 0.25 ÷ 0.50.","That's inverted.","Wrong arithmetic.","Wrong arithmetic."]),
+Q("For AgCl with solubility s, Ksp equals:",["s","s²","2s","s³"],1,["Two ions.","[Ag⁺][Cl⁻] = s².","Not correct.","Not correct."]),
+Q("For Ca(OH)₂ with solubility s, Ksp equals:",["s²","4s³","2s²","s³"],1,["Wrong.","s × (2s)² = 4s³.","Wrong.","Missing factor of 4."]),
+Q("If Q > Ksp, then:",["A precipitate forms","The solution is unsaturated","Nothing happens","K increases"],0,["Too many ions in solution.","That's Q < Ksp.","It isn't stable.","Ksp doesn't change."]),
+Q("If Q < Ksp, the solution is:",["Unsaturated","Supersaturated","At equilibrium","Precipitating"],0,["More solid can dissolve.","That's Q > Ksp.","That's Q = Ksp.","No."]),
+Q("Adding acid to a saturated CaCO₃ solution makes more CaCO₃ dissolve because:",["Carbonate is consumed","Ca²⁺ increases","Ksp rises","Water is removed"],0,["CO₃²⁻ reacts with H⁺.","Ca²⁺ isn't added.","Ksp is constant.","Not involved."]),
+Q("Equilibrium is dynamic, meaning:",["Both reactions continue at equal rates","All reactions stop","Only forward occurs","Concentrations are zero"],0,["No net change.","They don't stop.","Both occur.","Not zero."]),
+Q("K = 1 means:",["Comparable amounts of reactants and products","Only products","Only reactants","No reaction"],0,["Neither side dominates.","K would be huge.","K would be tiny.","Not implied."]),
+Q("K changes only with:",["Temperature","Concentration","Pressure","Catalyst"],0,["Only T alters K.","K stays constant.","K stays constant.","K stays constant."]),
+Q("For H₂ + I₂ ⇌ 2HI, [H₂] = [I₂] = 0.10 M and [HI] = 0.20 M. What is Q?",["4.0","2.0","0.25","40"],0,["0.040 ÷ 0.010.","Wrong arithmetic.","That's inverted.","Wrong arithmetic."]),
+Q("Removing product in the Haber process:",["Increases yield","Decreases yield","Doesn't matter","Raises K"],0,["Shifts right.","Opposite.","It matters.","K is fixed."]),
+Q("What is K for N₂O₄ ⇌ 2NO₂?",["[NO₂]²/[N₂O₄]","[NO₂]/[N₂O₄]","[N₂O₄]/[NO₂]²","[NO₂]²"],0,["Products over reactant, squared.","Missing the exponent.","Inverted.","Reactant omitted."]),
+Q("K for N₂O₄ ⇌ 2NO₂ is 0.25. What is K for 2NO₂ ⇌ N₂O₄?",["0.25","4.0","0.50","1.0"],1,["That is the original K.","The reverse reaction has K = 1/0.25 = 4.0.","Not the reciprocal.","Not correct."]),
+Q("When Δn(gas) = 0, Kₚ equals:",["K_c","K_c × RT","1","0"],0,["The RT factors cancel.","That's for Δn ≠ 0.","Not generally.","Not generally."]),
+Q("What is Kₚ for N₂ + 3H₂ ⇌ 2NH₃?",["P(NH₃)²/(P(N₂)·P(H₂)³)","P(NH₃)/(P(N₂)·P(H₂))","P(N₂)·P(H₂)³/P(NH₃)²","P(NH₃)²"],0,["Pressures take the same form as concentrations.","Missing exponents.","Inverted.","Reactants omitted."]),
+Q("For A ⇌ 2B starting at [A] = 1.0 M, equilibrium [B] = 0.20 M. What is [A] at equilibrium?",["0.90 M","0.80 M","0.10 M","1.0 M"],0,["x = 0.10, so [A] = 0.90.","That subtracts 2x.","That's x.","That's the start."]),
+Q("In that same reaction ([A] = 0.90, [B] = 0.20), K equals:",["0.044","0.22","0.040","4.4"],0,["0.040 ÷ 0.90.","Missing the square.","Forgot to divide by [A].","Inverted."]),
+Q("If K ≈ 10⁻¹⁰, the reaction:",["Barely proceeds","Goes to completion","Is very fast","Is at equilibrium"],0,["Almost no products form.","That's a huge K.","K says nothing about speed.","Not implied."]),
+Q("Heating N₂O₄ ⇌ 2NO₂ (endothermic) makes the mixture:",["Darker brown","Lighter","Unchanged","Colorless"],0,["More NO₂ forms.","Opposite.","K changes with T.","NO₂ is brown."]),
+Q("For AgCl, Ksp = 1.8 × 10⁻¹⁰. What is the molar solubility?",["1.8 × 10⁻¹⁰ M","1.3 × 10⁻⁵ M","9.0 × 10⁻¹¹ M","1.8 × 10⁻⁵ M"],1,["That's Ksp.","s = √Ksp.","Wrong arithmetic.","Wrong arithmetic."]),
+Q("AgCl has Ksp = 1.8 × 10⁻¹⁰ and AgBr has 5 × 10⁻¹³. Which is less soluble?",["AgCl","AgBr","Equal","Cannot tell"],1,["Larger Ksp.","Smaller Ksp with the same formula type.","Ksp values differ.","Ksp lets you compare."]),
+Q("[Ag⁺] = [Cl⁻] = 1 × 10⁻⁴ M. With Ksp = 1.8 × 10⁻¹⁰, does AgCl precipitate?",["Yes, Q > Ksp","No, Q < Ksp","Q = Ksp","Cannot tell"],0,["Q = 1 × 10⁻⁸ > 1.8 × 10⁻¹⁰.","Q is larger.","Not equal.","Q lets you tell."]),
+Q("AgCl's solubility in 0.10 M NaCl is about:",["1.8 × 10⁻⁹ M","1.3 × 10⁻⁵ M","0.10 M","1.8 × 10⁻¹⁰ M"],0,["Ksp ÷ 0.10.","That's in pure water.","Far too large.","That's Ksp."]),
+Q("Which species is left out of K for C(s) + CO₂(g) ⇌ 2CO(g)?",["C(s)","CO₂","CO","None"],0,["Pure solids are omitted.","Included.","Included.","A solid is omitted."]),
+Q("A reaction has K = 1 × 10³. It:",["Favors products","Favors reactants","Is very slow","Has no products"],0,["Large K.","That's small K.","K says nothing about rate.","Products dominate."]),
+Q("What does a catalyst do for a system approaching equilibrium?",["Reaches equilibrium faster","Changes K","Shifts it right","Shifts it left"],0,["It speeds both directions.","K is fixed.","Position is unchanged.","Position is unchanged."]),
+Q("Liquid water as the solvent is omitted from K because:",["Its concentration is essentially constant","It is a gas","It is a catalyst","It is a product"],0,["Pure liquids are left out.","It's a liquid.","Not a catalyst.","Not always."]),
+Q("The equilibrium constant expression for C(s) + CO₂(g) ⇌ 2CO(g) is:",["[CO]²/[CO₂]","[CO]²/([C][CO₂])","[CO]/[CO₂]","[CO₂]/[CO]²"],0,["Solids are omitted.","Don't include C(s).","Missing the square.","Inverted."])
+]},
+{name:"Unit 8: Acids & Bases",qs:[
+Q("What is the pH of 0.010 M HCl?",["1.00","2.00","10.00","12.00"],1,["That would be 0.10 M.","−log(0.010) = 2.00.","That's pOH-ish, not the pH of an acid.","That's a basic pH."]),
+Q("At 25 °C, a solution has pH 9. What is its pOH?",["9","5","14","7"],1,["That repeats the pH.","pH + pOH = 14, so pOH = 5.","14 is the sum.","7 is neutral."]),
+Q("A buffer contains:",["Strong acid and strong base","A weak acid and its conjugate base","Only water","Two strong acids"],1,["They neutralize, leaving no buffering.","The pair resists pH changes.","Water alone has no buffering.","That's just a strongly acidic solution."]),
+Q("At the half-equivalence point of a weak acid titration:",["pH = 7","pH = pKa","pH = 14","pH = 0"],1,["That's the equivalence point for strong–strong.","[HA] = [A⁻], so pH = pKa.","Far too basic.","Far too acidic."]),
+Q("A larger Kₐ means the acid is:",["Weaker","Stronger","Neutral","A base"],1,["Weaker acids have smaller Kₐ.","More dissociation means larger Kₐ.","Kₐ describes acids, not neutral substances.","Bases use K_b."]),
+Q("What is the pH of 0.0010 M NaOH?",["3","7","11","14"],2,["That's for 0.0010 M acid.","Neutral.","pOH = 3, so pH = 11.","Too basic."]),
+Q("A strong acid solution has [H⁺] = 1 × 10⁻³ M. Its pH is:",["3","11","−3","7"],0,["−log(10⁻³) = 3.","That's the pOH conjugate.","pH isn't negative here.","Neutral."]),
+Q("At 25 °C, K_w equals:",["1.0 × 10⁻⁷","1.0 × 10⁻¹⁴","14","1.0"],1,["That's [H⁺].","[H⁺][OH⁻] = 1.0 × 10⁻¹⁴.","That's pH + pOH.","Not K_w."]),
+Q("The conjugate base of a strong acid is:",["Strong","Negligibly basic","Very acidic","Amphoteric"],1,["It's very weak.","Strong acids dissociate completely.","Bases aren't acidic.","Not typical."]),
+Q("At the equivalence point of a weak acid–strong base titration, pH is:",["Less than 7","Equal to 7","Greater than 7","Zero"],2,["That's weak base–strong acid.","That's strong–strong.","The conjugate base makes it basic.","Not zero."]),
+Q("Which pair makes the best buffer near pH 4.7?",["CH₃COOH / CH₃COO⁻","HCl / Cl⁻","NaOH / Na⁺","H₂O / OH⁻"],0,["Acetic acid has pKa near 4.76.","Strong acid, no buffering.","Strong base, no buffering.","Not a buffer."]),
+Q("Adding a small amount of strong acid to a buffer makes the pH:",["Change very little","Drop sharply","Rise sharply","Become 7"],0,["The conjugate base absorbs the acid.","That's an unbuffered solution.","Acid lowers pH.","Not necessarily 7."]),
+Q("If [A⁻] = [HA] in a buffer, then pH equals:",["pKa","7","pKw","0"],0,["Henderson–Hasselbalch with log(1) = 0.","Only coincidentally.","Not relevant.","Not relevant."]),
+Q("A solution of NaCl in water has a pH of:",["About 7","Below 7","Above 7","Zero"],0,["Neither ion hydrolyzes.","Not acidic.","Not basic.","Not zero."]),
+Q("A solution of NH₄Cl in water is:",["Acidic","Basic","Neutral","Amphoteric"],0,["NH₄⁺ is a weak acid.","Cl⁻ is not basic.","NH₄⁺ donates protons.","Not applicable."]),
+Q("What is the pH of 0.10 M HCl?",["1","0.10","13","7"],0,["−log(0.10) = 1.","That's the concentration.","That's for a base.","Neutral."]),
+Q("A solution has pH 12. What is [H⁺]?",["1 × 10⁻¹² M","1 × 10⁻² M","12 M","1 × 10¹² M"],0,["[H⁺] = 10^(−pH).","That's pH 2.","Not a concentration.","Wrong sign."]),
+Q("A solution has pH 3. What is [OH⁻]?",["1 × 10⁻¹¹ M","1 × 10⁻³ M","11 M","1 × 10⁻⁷ M"],0,["pOH = 11.","That's [H⁺].","Not a concentration.","That's neutral."]),
+Q("What is the pOH of 0.010 M NaOH?",["2","12","0.010","7"],0,["−log(0.010) = 2.","That's the pH.","That's the concentration.","Neutral."]),
+Q("Each pH unit corresponds to a change in [H⁺] by a factor of:",["10","2","100","1"],0,["pH is logarithmic.","Not correct.","That's two pH units.","Not correct."]),
+Q("Which is a strong acid?",["HClO₄","HClO","HF","H₂CO₃"],0,["Fully dissociates.","Weak.","Weak.","Weak."]),
+Q("Which is a strong acid?",["HNO₃","HNO₂","CH₃COOH","HCN"],0,["Fully dissociates.","Weak.","Weak.","Weak."]),
+Q("For a conjugate acid-base pair, Kₐ × K_b equals:",["K_w","1","K_sp","0"],0,["1.0 × 10⁻¹⁴ at 25 °C.","Not correct.","Not related.","Not correct."]),
+Q("What is the conjugate acid of NH₃?",["NH₄⁺","NH₂⁻","N₂H₄","OH⁻"],0,["NH₃ plus H⁺.","That's the conjugate base.","Not related.","Not related."]),
+Q("What is the conjugate base of H₂O?",["OH⁻","H₃O⁺","H₂","O²⁻"],0,["H₂O minus H⁺.","That's the conjugate acid.","Not correct.","Too far."]),
+Q("What is the conjugate acid of H₂O?",["H₃O⁺","OH⁻","H₂","O²⁻"],0,["H₂O plus H⁺.","That's the conjugate base.","Not correct.","Not correct."]),
+Q("Which species is amphoteric?",["H₂O","Cl⁻","Na⁺","NO₃⁻"],0,["It can donate or accept H⁺.","Can't donate H⁺.","Not acidic or basic.","Very weakly basic."]),
+Q("What is the conjugate base of H₂PO₄⁻?",["HPO₄²⁻","H₃PO₄","PO₄³⁻","H₂PO₃⁻"],0,["Lose one H⁺.","That's the conjugate acid.","Lose two H⁺.","Not correct."]),
+Q("Which is the stronger acid?",["HCl","CH₃COOH","Equal","Cannot tell"],0,["Fully dissociates.","Weak.","They differ.","Kₐ tells you."]),
+Q("A larger pKa means the acid is:",["Weaker","Stronger","Neutral","Basic"],0,["pKa = −log Kₐ.","Opposite.","Not a category.","Not a base."]),
+Q("0.10 M HF has a ___ pH than 0.10 M HCl.",["Higher","Lower","Equal","Negative"],0,["HF is a weak acid.","HF produces less H⁺.","They differ.","Not negative."]),
+Q("Diluting a weak acid makes its percent ionization:",["Increase","Decrease","Stay the same","Become zero"],0,["Equilibrium shifts toward ions.","Opposite.","It changes.","Not zero."]),
+Q("The Kₐ expression for HA ⇌ H⁺ + A⁻ is:",["[H⁺][A⁻]/[HA]","[HA]/([H⁺][A⁻])","[H⁺]/[HA]","[A⁻]/[HA]"],0,["Products over reactant.","Inverted.","Missing A⁻.","Missing H⁺."]),
+Q("0.10 M weak acid with Kₐ = 1.0 × 10⁻⁶. What is the approximate pH?",["3.5","1.0","6.0","7.0"],0,["[H⁺] = √(Kₐ·C) ≈ 3.2 × 10⁻⁴.","That would be a strong acid.","Too high.","Neutral."]),
+Q("How many mL of 0.10 M NaOH neutralize 50 mL of 0.10 M HCl?",["50","25","100","10"],0,["1 : 1 and equal molarity.","That halves it.","That doubles it.","Too small."]),
+Q("Before the equivalence point in a strong acid–strong base titration (acid in flask), pH is:",["Below 7","Equal to 7","Above 7","Zero"],0,["Excess acid remains.","That's at equivalence.","That's after.","Not zero."]),
+Q("At the equivalence point of a weak base–strong acid titration, pH is:",["Below 7","Equal to 7","Above 7","14"],0,["The conjugate acid makes it acidic.","That's strong–strong.","That's weak acid–strong base.","Not 14."]),
+Q("For a weak acid–strong base titration, a good indicator changes color:",["Above pH 7","Below pH 7","At pH 0","At pH 14"],0,["Equivalence is basic.","That fits weak base–strong acid.","Not useful.","Not useful."]),
+Q("A buffer has its greatest capacity when:",["[HA] = [A⁻]","[HA] ≫ [A⁻]","[A⁻] ≫ [HA]","Both are zero"],0,["Balanced resists both acid and base.","Poor against acid.","Poor against base.","Not a buffer."]),
+Q("In a buffer, [A⁻] = 10[HA]. Then pH equals:",["pKa + 1","pKa − 1","pKa","7"],0,["log(10) = 1.","That's for [A⁻]/[HA] = 0.1.","That's for equal amounts.","Not necessarily."]),
+Q("In a buffer, [A⁻]/[HA] = 0.1. Then pH equals:",["pKa − 1","pKa + 1","pKa","14"],0,["log(0.1) = −1.","That's for 10.","That's for 1.","Not correct."]),
+Q("When strong base is added to a buffer, it is neutralized by:",["The weak acid component","The conjugate base","Water","The salt cation"],0,["HA + OH⁻ → A⁻ + H₂O.","That doesn't react with OH⁻.","Not the main path.","Spectator."]),
+Q("Which pair makes a buffer?",["NH₃ / NH₄Cl","HCl / NaCl","NaOH / NaCl","HNO₃ / KNO₃"],0,["Weak base plus conjugate acid.","Strong acid.","Strong base.","Strong acid."]),
+Q("Which mixture is not a buffer?",["HCl and NaCl","CH₃COOH and CH₃COONa","NH₃ and NH₄Cl","HF and NaF"],0,["Strong acid and neutral salt.","Weak acid plus conjugate base.","Weak base plus conjugate acid.","Weak acid plus conjugate base."]),
+Q("The pH of pure water at 25 °C is:",["7","0","14","1"],0,["Neutral.","Too acidic.","Too basic.","Too acidic."]),
+Q("Neutralizing a weak acid HA with NaOH forms:",["A⁻ and water","H⁺ and OH⁻","A strong acid","NaOH only"],0,["HA + OH⁻ → A⁻ + H₂O.","Not the product.","Not formed.","Not formed."]),
+Q("A solution of sodium acetate (CH₃COONa) is:",["Basic","Acidic","Neutral","Amphoteric"],0,["Acetate is a weak base.","Na⁺ is neutral.","Acetate hydrolyzes.","Not applicable."]),
+Q("A solution of KNO₃ is:",["Neutral","Acidic","Basic","Amphoteric"],0,["Both ions are spectators.","No acidic ion.","No basic ion.","Not applicable."]),
+Q("In H₂SO₄, the first ionization is:",["Strong","Weak","Zero","Reverse"],0,["Complete in water.","The second is weak.","It occurs.","It's forward."]),
+Q("Which is true for polyprotic acids?",["Kₐ1 > Kₐ2","Kₐ1 < Kₐ2","Kₐ1 = Kₐ2","Kₐ values are zero"],0,["Removing the first H⁺ is easier.","Opposite.","They differ.","Not zero."]),
+Q("A Lewis acid is an:",["Electron pair acceptor","Electron pair donor","Proton donor only","Neutral molecule"],0,["Accepts a pair.","That's a Lewis base.","That's Brønsted–Lowry.","Not a definition."]),
+Q("A Lewis base is an:",["Electron pair donor","Electron pair acceptor","Proton donor","Metal"],0,["Donates a pair.","That's a Lewis acid.","That's an acid.","Not a definition."]),
+Q("An Arrhenius acid:",["Produces H⁺ in water","Accepts H⁺","Donates electrons","Produces OH⁻"],0,["The classic definition.","That's a base.","Not a definition.","That's an Arrhenius base."]),
+Q("A solution has [OH⁻] = 1 × 10⁻⁴ M. What is the pH?",["10","4","7","14"],0,["pOH = 4, so pH = 10.","That's the pOH.","Neutral.","Too basic."]),
+Q("What is the pH of 0.0010 M HCl?",["3","11","1","7"],0,["−log(0.0010) = 3.","That's for a base.","That's 0.10 M.","Neutral."]),
+Q("What is the pH of 0.050 M Ba(OH)₂ (approximately)?",["13","12.7","1","7"],0,["[OH⁻] = 0.10 M, so pOH = 1, pH = 13.","That uses 0.050 M OH⁻.","That's for acid.","Neutral."]),
+Q("The pH of a basic solution is:",["Greater than 7","Less than 7","Exactly 7","Negative"],0,["Basic means pH > 7.","That's acidic.","That's neutral.","Not required."]),
+Q("In water, an acid increases the concentration of:",["H₃O⁺","OH⁻","Na⁺","Cl⁻"],0,["Acids donate protons to water.","That's a base.","Not specific.","Not specific."]),
+Q("Which is a weak acid?",["CH₃COOH","HBr","HI","HNO₃"],0,["Partially ionizes.","Strong.","Strong.","Strong."]),
+Q("A stronger acid has a conjugate base that is:",["Weaker","Stronger","Equal","Neutral"],0,["Inverse relationship.","Opposite.","They differ.","Not neutral."])
+]},
+{name:"Unit 9: Applications of Thermodynamics",qs:[
+Q("A reaction is spontaneous when:",["ΔG > 0","ΔG < 0","ΔG = 1","ΔH < 0 only"],1,["That's nonspontaneous.","Negative ΔG means spontaneous.","ΔG is not set to 1.","ΔS and T also matter."]),
+Q("Which reaction has the most positive ΔS?",["N₂(g) + 3H₂(g) → 2NH₃(g)","H₂O(g) → H₂O(l)","CaCO₃(s) → CaO(s) + CO₂(g)","2NO(g) → N₂(g) + O₂(g)"],2,["Gas moles drop from 4 to 2, so ΔS is negative.","Gas to liquid lowers entropy.","A solid producing a gas increases entropy a lot.","The number of gas moles stays the same, so ΔS is near zero."]),
+Q("A reaction with ΔH < 0 and ΔS > 0 is:",["Never spontaneous","Always spontaneous","Spontaneous only at high T","Spontaneous only at low T"],1,["ΔG = ΔH − TΔS is always negative here.","Both terms push ΔG negative at every T.","That's for ΔH > 0, ΔS > 0.","That's for ΔH < 0, ΔS < 0."]),
+Q("In a galvanic cell, oxidation occurs at the:",["Cathode","Anode","Salt bridge","Wire"],1,["Reduction happens at the cathode.","'An ox': anode is oxidation.","The salt bridge only balances charge.","Electrons travel in the wire, no half-reaction."]),
+Q("A positive E°cell means ΔG° is:",["Positive","Negative","Zero","Undefined"],1,["That would match a negative E°.","ΔG° = −nFE°, so positive E° gives negative ΔG°.","Zero means equilibrium.","It's defined by the equation."]),
+Q("Which process has a positive ΔS?",["Ice melting","Water freezing","Gas condensing","Salt crystallizing"],0,["Solid to liquid increases disorder.","That lowers entropy.","That lowers entropy.","That lowers entropy."]),
+Q("If K > 1, then ΔG° is:",["Negative","Positive","Zero","Undefined"],0,["ΔG° = −RT ln K.","That's for K < 1.","That's K = 1.","It's defined."]),
+Q("ΔH > 0 and ΔS > 0: the reaction is spontaneous:",["At high T","At low T","Never","Always"],0,["TΔS must outweigh ΔH.","That would need ΔH < 0.","It can be at high T.","Not always."]),
+Q("Reduction occurs at the:",["Anode","Cathode","Salt bridge","Wire"],1,["That's oxidation.","Cathode is where reduction happens.","It balances charge.","Electrons travel there."]),
+Q("In a galvanic cell, electrons flow:",["Anode to cathode","Cathode to anode","Through the salt bridge","Not at all"],0,["Through the external wire.","Opposite direction.","Ions use the bridge.","They do flow."]),
+Q("The standard hydrogen electrode has a potential of:",["0.00 V","1.00 V","−1.00 V","0.76 V"],0,["It's the reference.","Not the reference.","Not the reference.","That's Zn."]),
+Q("What does a salt bridge do?",["Maintains charge balance","Carries electrons","Produces current","Stops the reaction"],0,["Ions migrate to balance charge.","Electrons use the wire.","The redox reaction does that.","It keeps it going."]),
+Q("Electrolysis uses electrical energy to drive:",["A nonspontaneous reaction","A spontaneous reaction","No reaction","A nuclear reaction"],0,["That's the point.","That's a galvanic cell.","It drives a reaction.","Not nuclear."]),
+Q("At equilibrium, E_cell equals:",["0 V","E°","1.00 V","−E°"],0,["The cell can do no more work.","That's for standard conditions.","Not fixed.","Not applicable."]),
+Q("Which process has a negative ΔS?",["Water freezing","Ice melting","Boiling","Gas expanding"],0,["Liquid to solid lowers entropy.","Increases entropy.","Increases entropy.","Increases entropy."]),
+Q("ΔH = −50 kJ and ΔS = −100 J/K at 300 K. What is ΔG?",["−20 kJ","−80 kJ","+20 kJ","−50 kJ"],0,["−50 − (300)(−0.100) = −20 kJ.","That adds TΔS instead of subtracting.","Wrong sign.","That ignores TΔS."]),
+Q("ΔH = +40 kJ and ΔS = +100 J/K at 300 K. The reaction is:",["Nonspontaneous (ΔG = +10 kJ)","Spontaneous (ΔG = −10 kJ)","At equilibrium","Impossible"],0,["40 − 30 = +10 kJ.","Wrong sign.","ΔG isn't zero.","It can still occur at other T."]),
+Q("ΔH = +60 kJ and ΔS = +200 J/K. At what temperature is ΔG = 0?",["300 K","120 K","30 K","3000 K"],0,["T = ΔH/ΔS = 60,000 ÷ 200.","Wrong arithmetic.","Units slip.","Units slip."]),
+Q("ΔH < 0 and ΔS < 0 is spontaneous at:",["Low T","High T","All T","No T"],0,["ΔH dominates at low T.","TΔS dominates there.","Not always.","Sometimes."]),
+Q("ΔH > 0 and ΔS < 0 is:",["Never spontaneous","Always spontaneous","Spontaneous at high T","Spontaneous at low T"],0,["ΔG is always positive.","Opposite.","That's ΔH>0, ΔS>0.","That's ΔH<0, ΔS<0."]),
+Q("A spontaneous reaction is always:",["Thermodynamically favorable, not necessarily fast","Fast","Exothermic","Reversible"],0,["Spontaneity says nothing about speed.","It may be slow.","Not necessarily.","Not required."]),
+Q("Which has the highest entropy?",["H₂O(g)","H₂O(l)","H₂O(s)","All equal"],0,["Gases have the most disorder.","Less than gas.","Least of these.","They differ."]),
+Q("Dissolving most ionic solids in water typically causes entropy to:",["Increase","Decrease","Stay constant","Vanish"],0,["Ions spread out.","Opposite.","It changes.","Not zero."]),
+Q("Which sample has the higher entropy?",["CO₂ at 100 °C","CO₂ at 25 °C","Equal","Cannot tell"],0,["Higher T, more motion.","Less motion.","They differ.","Temperature tells you."]),
+Q("Which has the greater entropy at the same T?",["C₂H₆(g)","CH₄(g)","Equal","Cannot tell"],0,["More atoms and more microstates.","Fewer.","They differ.","Size tells you."]),
+Q("Which reaction has a positive ΔS?",["N₂O₄(g) → 2NO₂(g)","2NO₂(g) → N₂O₄(g)","2H₂(g) + O₂(g) → 2H₂O(g)","H₂O(g) → H₂O(l)"],0,["Moles of gas increase.","Moles of gas decrease.","Moles of gas decrease.","Gas to liquid."]),
+Q("Which reaction has a negative ΔS?",["2H₂(g) + O₂(g) → 2H₂O(g)","CaCO₃(s) → CaO(s) + CO₂(g)","N₂O₄(g) → 2NO₂(g)","NH₄NO₃(s) → NH₄⁺(aq) + NO₃⁻(aq)"],0,["3 mol gas become 2.","Gas forms.","Gas moles increase.","Ions disperse."]),
+Q("The second law says that in a spontaneous process, the entropy of the:",["Universe increases","System always increases","Surroundings always decreases","Universe decreases"],0,["ΔS_universe > 0.","The system can decrease.","Not always.","Opposite."]),
+Q("If K < 1, ΔG° is:",["Positive","Negative","Zero","Undefined"],0,["ΔG° = −RT ln K, with ln K negative.","That's for K > 1.","That's K = 1.","It's defined."]),
+Q("If K = 1, ΔG° is:",["Zero","Positive","Negative","Infinite"],0,["ln 1 = 0.","Needs K < 1.","Needs K > 1.","Not infinite."]),
+Q("If ΔG > 0 for a reaction, the reverse reaction is:",["Spontaneous","Nonspontaneous","At equilibrium","Impossible"],0,["Sign flips.","That's the forward reaction.","ΔG isn't zero.","It's favorable."]),
+Q("A nonspontaneous reaction can be driven by:",["Coupling it to a spontaneous reaction","Waiting longer","Lowering K","Adding water"],0,["Combined ΔG is negative.","Doesn't help.","K is fixed.","Not a general method."]),
+Q("At equilibrium, ΔG equals:",["0","ΔG°","−ΔG°","1"],0,["No driving force.","Only at Q = 1.","Not correct.","Not correct."]),
+Q("If Q < K, ΔG is:",["Negative","Positive","Zero","Undefined"],0,["The reaction proceeds forward.","That's Q > K.","That's Q = K.","It's defined."]),
+Q("A species with a higher standard reduction potential is:",["More easily reduced","Less easily reduced","Always oxidized","A catalyst"],0,["It gains electrons more readily.","Opposite.","Not necessarily.","Not related."]),
+Q("E°cell equals:",["E°cathode − E°anode","E°anode − E°cathode","E°cathode + E°anode","E°cathode × E°anode"],0,["Reduction potentials subtract.","Wrong order.","Wrong operation.","Wrong operation."]),
+Q("Cu²⁺/Cu is +0.34 V and Zn²⁺/Zn is −0.76 V. What is E°cell for the Zn–Cu galvanic cell?",["+1.10 V","−1.10 V","+0.42 V","−0.42 V"],0,["0.34 − (−0.76).","Wrong sign.","Wrong subtraction.","Wrong subtraction."]),
+Q("Which is the strongest oxidizing agent?",["The species with the highest E°","The species with the lowest E°","Any metal","Any anion"],0,["It's most easily reduced.","That's the strongest reducing agent.","Not general.","Not general."]),
+Q("In a Zn–Cu galvanic cell, the cathode is:",["Cu","Zn","The salt bridge","The wire"],0,["Cu²⁺ is reduced there.","Zn is oxidized at the anode.","Not an electrode.","Not an electrode."]),
+Q("In a Zn–Cu galvanic cell, the Zn electrode's mass:",["Decreases","Increases","Stays the same","Doubles"],0,["Zn dissolves as Zn²⁺.","Opposite.","It changes.","No."]),
+Q("In a galvanic cell, anions in the salt bridge migrate toward the:",["Anode","Cathode","Wire","Electrolyte only"],0,["They balance the positive charge building up there.","Opposite.","Ions don't travel in the wire.","They move."]),
+Q("In an electrolytic cell, the anode is:",["Positive","Negative","Neutral","Absent"],0,["Opposite of a galvanic cell.","That's the galvanic cell's anode.","It has a charge.","It exists."]),
+Q("In the electrolysis of molten NaCl, what forms at the cathode?",["Na","Cl₂","H₂","O₂"],0,["Na⁺ is reduced.","That forms at the anode.","No water present.","No water present."]),
+Q("What charge passes when 2.0 A flows for 100 s?",["200 C","50 C","0.02 C","2000 C"],0,["Q = I × t.","That divides.","Wrong arithmetic.","Off by 10."]),
+Q("How many moles of electrons correspond to 9650 C (F = 96,485 C/mol)?",["0.10 mol","1.0 mol","10 mol","0.010 mol"],0,["9650 ÷ 96,485.","That's 96,485 C.","Off by 100.","Off by 10."]),
+Q("0.10 mol of electrons plates how much Ag from Ag⁺ (107.9 g/mol)?",["10.8 g","1.08 g","108 g","5.4 g"],0,["One electron per Ag.","Off by 10.","Off by 1000.","That assumes two electrons."]),
+Q("Increasing a reactant's concentration in a galvanic cell generally:",["Increases E_cell","Decreases E_cell","Doesn't change E_cell","Changes E°"],0,["Q drops, so E rises.","Opposite.","It does.","E° is fixed."]),
+Q("If Q > 1 in a cell, E compared with E° is:",["Lower","Higher","Equal","Undefined"],0,["More products reduce the driving force.","That's Q < 1.","That's Q = 1.","Defined by the Nernst equation."]),
+Q("If E°cell > 0, then K is:",["Greater than 1","Less than 1","Equal to 1","Zero"],0,["Spontaneous under standard conditions.","That's for E° < 0.","That's for E° = 0.","Not zero."]),
+Q("A concentration cell has E°cell equal to:",["0 V","1.00 V","−1.00 V","Its E_cell"],0,["Same electrode materials on both sides.","Not correct.","Not correct.","E° and E differ here."]),
+Q("A battery stops producing voltage when the cell reaches:",["Equilibrium","Standard conditions","Q = 0","K = 0"],0,["E = 0 at equilibrium.","Not the reason.","Not the reason.","Not the reason."]),
+Q("A sacrificial zinc anode protects iron because Zn is:",["More easily oxidized than Fe","Less easily oxidized","A catalyst","An oxidizing agent"],0,["It corrodes instead of Fe.","Then it wouldn't protect.","Not a catalyst.","It's a reducing agent."]),
+Q("n = 2 and E° = +1.10 V. What is ΔG° (F = 96,485 C/mol)?",["−212 kJ","−106 kJ","+212 kJ","−1.10 kJ"],0,["−2 × 96,485 × 1.10.","That uses n = 1.","Wrong sign.","Units slip."]),
+Q("A larger positive E°cell corresponds to a ΔG° that is:",["More negative","Less negative","Positive","Zero"],0,["ΔG° = −nFE°.","Opposite.","Wrong sign.","Not zero."]),
+Q("Which statement describes an electrolytic cell?",["It uses electrical energy to drive a reaction","It produces electricity spontaneously","It has no electrodes","It has E°cell > 0"],0,["That's what it does.","That's a galvanic cell.","It has electrodes.","E°cell is negative."]),
+Q("Which equation relates ΔG to Q?",["ΔG = ΔG° + RT ln Q","ΔG = ΔH + TΔS","ΔG = −nFE","ΔG = q"],0,["Gives ΔG under nonstandard conditions.","Wrong sign on TΔS.","Needs E° or E.","Not correct."]),
+Q("In the reaction ΔG = ΔH − TΔS, raising T has a larger effect on ΔG when:",["ΔS is large","ΔH is large","The reaction is slow","The reaction is reversible"],0,["TΔS grows with ΔS.","ΔH doesn't depend on T here.","Rate doesn't matter.","Not relevant."]),
+Q("Which condition makes a process spontaneous at all temperatures?",["ΔH < 0 and ΔS > 0","ΔH > 0 and ΔS < 0","ΔH > 0 and ΔS > 0","ΔH < 0 and ΔS < 0"],0,["ΔG is always negative.","Never spontaneous.","Only at high T.","Only at low T."]),
+Q("At the melting point, a solid and liquid are in equilibrium, so ΔG equals:",["0","ΔH","ΔS","1"],0,["No net driving force.","Not correct.","Not correct.","Not correct."])
+]}
+]}];
+COURSES[0].poly=POLY;
+const add=(i,...qs)=>COURSES[0].topics[i].qs.push(...qs);
 
-function home(){
-  app.innerHTML=hdr()+`<h1>Study smarter.<br>Not longer.</h1><p class="sub">Every wrong answer gets explained. Earn XP, build streaks, level up.</p>`+
-  COURSES.map((c,i)=>{const n=ready(c).reduce((s,t)=>s+t.qs.length,0);return `<button class="card hero" onclick="pickCourse(${i})"><b>${c.name}</b><small>${n} questions · ${ready(c).length} topics</small></button>`}).join('')+
-  `<p class="sub" style="margin-top:22px">Best streak: 🔥 ${SAVE.bestStreak}</p>`;
-}
-function pickCourse(i){
-  course=COURSES[i];
-  app.innerHTML=hdr('<button class="back" style="margin:0" onclick="home()">‹</button>')+`<h1>${course.name}</h1><p class="sub">Pick your grind.</p>
-  <button class="card" onclick="chapters()"><b>📚 Chapter drills</b><small>One unit at a time, with your best score saved</small></button>
-  <button class="card" onclick="lengthPick(-1)"><b>🧪 Full course mix</b><small>Random questions from every unit, like exam day</small></button>`+
-  (course.poly?`<button class="card" onclick="drill()"><b>🧠 Polyatomic ion drill</b><small>20 rapid-fire cards, name ⇄ formula</small></button>`:'');
-}
-function chapters(){
-  app.innerHTML=hdr('<button class="back" style="margin:0" onclick="pickCourse(COURSES.indexOf(course))">‹</button>')+`<h1>Chapters</h1><p class="sub">Your best score shows under each one.</p>`+
-  course.topics.map((t,i)=>{const b=SAVE.best[t.name]||0;return `<button class="card" ${t.qs.length?'':'disabled'} onclick="lengthPick(${i})"><b>${esc(t.name)}</b><small>${t.qs.length} questions${b?' · best '+b+'%':''}</small><div class="meter"><i style="width:${b}%"></i></div></button>`}).join('');
-}
-function lengthPick(i){
-  if(i!==undefined)LP={i,ts:i<0?ready(course):[course.topics[i]],name:i<0?'Full course mix':course.topics[i].name};
-  const total=LP.ts.reduce((s,t)=>s+byTier(t.qs).length,0),hardN=LP.ts.reduce((s,t)=>s+t.qs.filter(q=>q.hard).length,0);
-  const opts=(LP.i<0?[25,50,100]:[10,20,40]).filter(n=>n<total).concat(total?[total]:[]);
-  app.innerHTML=hdr(`<button class="back" style="margin:0" onclick="${LP.i<0?'pickCourse(COURSES.indexOf(course))':'chapters()'}">‹</button>`)+`<h1>${esc(LP.name)}</h1><p class="sub">Choose difficulty and length.</p>
-  <div class="pills">${[['easy','Warm-up'],['mix','Mixed'],['hard','Exam-level 🔥']].map(([k,n])=>`<button class="pill ${tier==k?'on':''}" onclick="tier='${k}';lengthPick()">${n}</button>`).join('')}</div>`+
-  (opts.length?opts.map(n=>`<button class="card" onclick="go(${n})"><b>${n==total?'All '+n:n+' questions'}</b><small>${n==total?'The whole set, shuffled':'Random mix'}</small></button>`).join(''):`<p class="sub">No questions in this difficulty yet (${hardN} exam-level so far). Try Mixed.</p>`);
-}
-function go(n){start(sample(LP.ts,n),LP.name)}
-function start(qs,name){pool=shuffle(qs).map(prep);label=name;idx=0;score=0;missed=[];streak=0;gained=0;show()}
-function show(){
-  const q=pool[idx];window.scrollTo(0,0);
-  app.innerHTML=hdr('<button class="back" style="margin:0" onclick="if(confirm(\'Quit this round?\'))pickCourse(COURSES.indexOf(course))">✕</button>')+
-  `<div class="hud"><span>${idx+1}/${pool.length}</span><span class="sp"></span><span>🔥 ${streak}</span></div><div class="meter" style="margin:0 0 18px"><i style="width:${idx/pool.length*100}%"></i></div>`+
-  (q.hard?'<span class="tag">EXAM-LEVEL</span>':'')+`<div class="q">${esc(q.q)}</div>`+
-  q.o.map((o,k)=>`<button class="opt" onclick="answer(${k})"><span class="k">${k+1}</span><span>${esc(o)}</span></button>`).join('')+'<div id="fb"></div>';
-}
-function answer(k){
-  const q=pool[idx],opts=[...document.querySelectorAll('.opt')];
-  opts.forEach((b,i)=>{b.disabled=true;if(i==q.a)b.classList.add('ok');else if(i==k)b.classList.add('no')});
-  let h,cls,xp=0;
-  if(k==q.a){score++;streak++;SAVE.bestStreak=Math.max(SAVE.bestStreak,streak);xp=(q.hard?20:10)+Math.min(streak,5)*2;gained+=xp;SAVE.xp+=xp;
-    h=`<p><b>Locked in.</b> ${esc(q.f[q.a])}</p>`;cls='good'}
-  else{streak=0;missed.push({q:esc(q.q),pick:esc(q.o[k]),why:esc(q.f[k]),right:esc(q.o[q.a])});
-    h=`<p><b>Not quite.</b> ${esc(q.f[k])}</p><p><b>Answer: ${esc(q.o[q.a])}.</b> ${esc(q.f[q.a])}</p>`;cls='bad'}
-  if(xp){const p=document.createElement('div');p.className='pop';p.textContent='+'+xp+' XP';document.body.appendChild(p);setTimeout(()=>p.remove(),900)}
-  save();const last=idx==pool.length-1;
-  document.getElementById('fb').innerHTML=`<div class="fb ${cls}" role="status">${h}</div><button class="go" id="next" onclick="${last?'finish()':'idx++;show()'}">${last?'See results':'Next →'}</button>`;
-  document.getElementById('next').focus();
-}
-function finish(){
-  const pct=Math.round(score/pool.length*100);
-  if(pct>(SAVE.best[label]||0))SAVE.best[label]=pct;save();
-  const msg=pct==100?'Perfect. Absolute unit. 🏆':pct>=80?'Strong. Almost exam-ready.':pct>=60?'Getting there. Review the misses below.':'Rough round. That is how you learn it.';
-  app.innerHTML=hdr()+`<p class="sub">${esc(label)}</p><p class="big">${score}/${pool.length}</p><p class="sub">${msg} +${gained} XP this round.</p>`+
-  (missed.length?'<h2 style="font-size:1.1rem">Review your misses</h2><ul style="padding-left:1.1em">'+missed.map(m=>`<li><b>${m.q}</b><br>You picked ${m.pick}. ${m.why}<br><b>Answer:</b> ${m.right}</li>`).join('')+'</ul>':'')+
-  `<button class="go" onclick="label=='Polyatomic drill'?drill():start(pool,label)">Run it back</button><button class="card" style="margin-top:10px;text-align:center" onclick="pickCourse(COURSES.indexOf(course))">Back to ${course.name}</button>`;
-}
-function drill(){
-  const L=course.poly;
-  pool=shuffle(L).slice(0,20).map(ion=>{
-    const toName=Math.random()<.5,rest=L.filter(x=>x!==ion);
-    const ds=shuffle(rest.filter(x=>x.g==ion.g)).concat(shuffle(rest.filter(x=>x.g!=ion.g))).slice(0,3);
-    const all=shuffle([ion,...ds]);
-    return{q:toName?`Name this ion: ${ion.f}`:`Which is the formula of ${ion.n}?`,o:all.map(x=>toName?x.n:x.f),a:all.indexOf(ion),
-      f:all.map(x=>x===ion?`${ion.f} is ${ion.n}.`:toName?`${x.n} is ${x.f}, not ${ion.f}.`:`${x.f} is ${x.n}, not ${ion.n}.`)};
-  });
-  label='Polyatomic drill';idx=0;score=0;missed=[];streak=0;gained=0;show();
-}
-document.addEventListener('keydown',e=>{
-  const n=document.getElementById('next');
-  if(e.key=='Enter'&&n&&document.activeElement!==n){n.click();return}
-  const b=document.querySelectorAll('.opt'),k=+e.key;
-  if(k>=1&&k<=b.length&&!b[k-1].disabled)b[k-1].click();
-});
-home();
-</script>
-</body>
-</html>
+// ---- Exam-level (hard) questions: tagged hard:true, shown in "Exam-level" and "Mixed" ----
+const H=(...a)=>({...Q(...a),hard:true});
+const addH=(i,...qs)=>COURSES[0].topics[i].qs.push(...qs);
+addH(1,
+H("A 2.50 g sample of MgSO₄·xH₂O is heated until only 1.22 g of MgSO₄ (120.4 g/mol) remains. What is x?",["5","6","7","10"],2,["x = 5 would leave far more MgSO₄ per gram of hydrate.","x = 6 gives about 1.28 g of water per 0.0101 mol, which is slightly off.","Water lost = 1.28 g = 0.0710 mol; MgSO₄ = 0.01013 mol; the ratio is 7.0.","x = 10 would mean almost twice the water that was actually lost."]),
+H("A PES spectrum has four peaks with relative heights 2 : 2 : 6 : 1. Which element is it?",["Sodium","Magnesium","Neon","Potassium"],0,["1s²2s²2p⁶3s¹ gives exactly 2 : 2 : 6 : 1.","Magnesium's last peak would have height 2.","Neon has only three peaks (2 : 2 : 6).","Potassium would show additional peaks for 3s and 3p."])
+);
+addH(2,
+H("Which species has bond angles near 120° and is also nonpolar overall?",["BF₃","NH₃","SO₂","PCl₃"],0,["Trigonal planar with identical B–F dipoles that cancel.","NH₃ is pyramidal (about 107°) and polar.","SO₂ is bent (about 119°) and polar because of the lone pair.","PCl₃ is pyramidal (about 100°) and polar."])
+);
+addH(3,
+H("A rigid 2.00 L container holds 0.500 mol N₂ and 1.50 mol He at 300 K (R = 0.0821). What is the partial pressure of N₂?",["6.16 atm","24.6 atm","1.54 atm","18.5 atm"],0,["P = nRT/V = 0.500 × 0.0821 × 300 ÷ 2.00 = 6.16 atm.","That is the total pressure of both gases.","That divides by too large a volume.","That is the partial pressure of He."]),
+H("50.0 mL of 0.40 M NaCl is mixed with 150.0 mL of 0.20 M CaCl₂. What is [Cl⁻] in the mixture?",["0.30 M","0.40 M","0.50 M","0.20 M"],1,["That averages the two stated molarities and ignores that CaCl₂ gives two Cl⁻ per unit.","Cl⁻ = 0.020 + 0.060 = 0.080 mol in 0.200 L = 0.40 M.","That overcounts the chloride from CaCl₂.","That is only the CaCl₂ molarity."])
+);
+addH(4,
+H("25.0 mL of 0.100 M H₃PO₄ is titrated with 0.100 M NaOH until HPO₄²⁻ is the main species. What volume of NaOH is needed?",["25.0 mL","50.0 mL","75.0 mL","100 mL"],1,["That removes only one proton.","Two protons per H₃PO₄: 0.00250 × 2 = 0.00500 mol NaOH = 50.0 mL.","That removes all three protons (forming PO₄³⁻).","That is more than the full neutralization."]),
+H("5Fe²⁺ + MnO₄⁻ + 8H⁺ → 5Fe³⁺ + Mn²⁺ + 4H₂O. 20.0 mL of 0.0200 M KMnO₄ is needed. How many moles of Fe²⁺ were present?",["4.00 × 10⁻⁴","2.00 × 10⁻³","8.00 × 10⁻⁵","1.00 × 10⁻²"],1,["That is the moles of MnO₄⁻ only, missing the 5 : 1 ratio.","MnO₄⁻ = 4.00 × 10⁻⁴ mol, and × 5 gives 2.00 × 10⁻³ mol Fe²⁺.","That divides by 5 instead of multiplying.","That uses the wrong volume conversion."])
+);
+addH(5,
+H("Initial rates: [A], [B] = 0.10, 0.10 gives 2.0 × 10⁻³ M/s; 0.20, 0.10 gives 4.0 × 10⁻³; 0.20, 0.30 gives 3.6 × 10⁻². What are the rate law and k?",["rate = k[A][B]², k = 2.0 M⁻²s⁻¹","rate = k[A]²[B], k = 20 M⁻²s⁻¹","rate = k[A][B], k = 0.20 M⁻¹s⁻¹","rate = k[A][B]², k = 0.20 M⁻²s⁻¹"],0,["Doubling A doubles the rate (first order); tripling B gives ×9 (second order); k = 2.0 × 10⁻³ ÷ (0.10 × 0.10²) = 2.0.","A is first order, not second.","B is second order, not first.","The orders are right, but k is off by a factor of 10."]),
+H("Step 1 (fast, equilibrium): 2NO ⇌ N₂O₂. Step 2 (slow): N₂O₂ + O₂ → 2NO₂. What is the rate law?",["k[NO]²[O₂]","k[N₂O₂][O₂]","k[NO][O₂]","k[NO]²"],0,["The slow step gives k₂[N₂O₂][O₂], and the fast equilibrium gives [N₂O₂] ∝ [NO]².","That is the slow step's rate, but it contains an intermediate.","That ignores the squared dependence from the equilibrium.","That drops O₂, which is in the slow step."])
+);
+addH(6,
+H("1.00 g of a salt (80.0 g/mol) dissolves in 50.0 g of water in a calorimeter, and T drops from 25.0 to 22.8 °C. Take c = 4.18 J/g·°C for 51.0 g of solution. What is ΔH per mole of salt?",["+37.5 kJ/mol","−37.5 kJ/mol","+469 kJ/mol","+0.469 kJ/mol"],0,["q = 51.0 × 4.18 × 2.2 ≈ 469 J absorbed from the water; ÷ 0.0125 mol = +37.5 kJ/mol.","The solution cooled, so dissolving absorbed heat (positive ΔH).","That forgets to divide by moles.","That never converts the total heat to per mole."]),
+H("C(s) + O₂ → CO₂ (ΔH = −393.5 kJ) and CO + ½O₂ → CO₂ (ΔH = −283.0 kJ). What is ΔH for C(s) + ½O₂ → CO?",["−110.5 kJ","−676.5 kJ","+110.5 kJ","−283.0 kJ"],0,["Reverse the second reaction and add: −393.5 + 283.0 = −110.5.","That adds the two without reversing the second.","That has the wrong sign.","That's the ΔH of CO combustion, not CO formation."])
+);
+addH(7,
+H("N₂O₄ ⇌ 2NO₂ starts at 1.00 M N₂O₄ with no NO₂. At equilibrium [NO₂] = 0.30 M. What is K?",["0.11","0.090","0.35","0.21"],0,["N₂O₄ drops by 0.15 to 0.85 M; K = 0.30² ÷ 0.85 ≈ 0.11.","That forgets to divide by [N₂O₄].","That uses 0.30 ÷ 0.85 without squaring.","That subtracts the full 0.30 from N₂O₄."]),
+H("Ksp of PbI₂ is 1.4 × 10⁻⁸. What is its solubility in 0.10 M NaI?",["1.4 × 10⁻⁶ M","1.5 × 10⁻³ M","1.4 × 10⁻⁷ M","1.2 × 10⁻⁴ M"],0,["[I⁻] ≈ 0.10, so s = Ksp ÷ (0.10)² = 1.4 × 10⁻⁶ M.","That is the solubility in pure water.","That divides by 0.10 only once.","That ignores the common ion."])
+);
+addH(8,
+H("A 1.00 L buffer has 0.20 mol HA and 0.40 mol A⁻ (pKa 4.80). After adding 0.050 mol HCl, what is the pH?",["4.95","4.65","5.10","4.80"],0,["HA becomes 0.25 and A⁻ 0.35, so pH = 4.80 + log(0.35/0.25) ≈ 4.95.","That moves the ratio the wrong way.","That is the pH before adding HCl.","That equals pKa, which needs equal amounts."])
+);
+addH(9,
+H("A reaction has ΔH° = −92 kJ and ΔS° = −199 J/K. Above what temperature does it become nonspontaneous?",["462 K","0.462 K","92 K","199 K"],0,["ΔG = 0 at T = ΔH/ΔS = 92,000 ÷ 199 ≈ 462 K, and above it TΔS wins.","That forgets to convert kJ to J.","That is ΔH's magnitude, not a temperature.","That is ΔS's magnitude, not a temperature."]),
+H("E°cell = +0.46 V with n = 2 at 298 K. Roughly what is K?",["10¹⁵","10⁷","10¹","10⁻¹⁵"],0,["log K = nE°/0.0592 = 2(0.46)/0.0592 ≈ 15.5.","That uses n = 1 and an error in the factor.","That is far too small for this E°.","Positive E° means K > 1, not a tiny K."])
+);
